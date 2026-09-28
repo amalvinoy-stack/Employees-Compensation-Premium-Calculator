@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Workmen Compensation Premium Calculator</title>
+<style>
+:root {
+  --navy: #0b3d91;
+  --navy2: #0d4bb5;
+  --blue: #1a56db;
+  --blue-bg: #eef4ff;
+  --green: #16a34a;
+  --red: #dc2626;
+  --gray: #64748b;
+  --border: #e2e8f0;
+  --bg: #eef2f7;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:#1e293b;line-height:1.5;padding:16px 12px 40px;min-height:100vh;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+.wrap{max-width:920px;margin:0 auto}
+
+/* Header */
+.header{
+  background:linear-gradient(135deg,#0a3a8a 0%,#0d4bb5 55%,#1565c0 100%);
+  border-radius:16px 16px 0 0;color:#fff;padding:20px 24px 0;
+  display:flex;flex-direction:column;
+  position:relative;overflow:hidden;
+}
+.header-main{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  position:relative;z-index:2;padding-bottom:8px;
+}
+.header::before{content:'';position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.05);top:-60px;right:-30px;z-index:0}
+.header-skyline{
+  width:100%;
+  height:56px;
+  margin:0 -24px;
+  width:calc(100% + 48px);
+  line-height:0;
+  position:relative;
+  z-index:1;
+}
+.header-skyline svg{width:100%;height:56px;display:block}
+.header-left{display:flex;align-items:center;gap:14px;position:relative;z-index:1}
+.logo{width:46px;height:46px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo svg{width:28px;height:28px}
+.header h1{font-size:1.35rem;font-weight:800;line-height:1.25}
+.badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:4px 10px;font-size:.75rem;font-weight:600;margin-top:6px}
+@media(max-width:640px){.header h1{font-size:1.15rem}.header-skyline{height:40px}.header-skyline svg{height:40px}}
+
+/* Card */
+.card{
+  background:#fff;
+  border-radius:0 0 16px 16px;
+  box-shadow:0 8px 30px rgba(0,0,0,.08);
+  overflow:hidden;
+}
+.section:nth-child(1){background:linear-gradient(180deg,#eef2ff 0%,#ffffff 100%)}
+.section:nth-child(2){background:linear-gradient(180deg,#f0fdfa 0%,#ffffff 45%)}
+.section:nth-child(3){background:linear-gradient(180deg,#ecfdf5 0%,#ffffff 50%)}
+.section:nth-child(4){background:linear-gradient(180deg,#f5f3ff 0%,#ffffff 60%)}
+.worker-card{background:linear-gradient(180deg,#f0fdfa 0%,#fff 100%);border-color:#99f6e4}
+.summary{background:#fff;border:none;border-radius:0}
+.section{padding:20px 24px;border-bottom:1px solid var(--border)}
+.section:last-child{border-bottom:none}
+.sec-title{display:flex;align-items:center;gap:10px;font-size:.98rem;font-weight:700;color:var(--navy);margin-bottom:14px}
+.sec-icon{width:30px;height:30px;background:var(--blue-bg);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.sec-icon svg{width:16px;height:16px;stroke:var(--blue)}
+
+/* Fields */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.row2{grid-template-columns:1fr}}
+label{display:block;font-size:.76rem;font-weight:600;color:var(--gray);margin-bottom:4px}
+label .req{color:var(--red)}
+input,select{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:.9rem;background:#fff;color:#1e293b;transition:border-color .15s}
+input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,219,.12)}
+
+/* Worker table */
+.toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.btn-add{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:.84rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.btn-add:hover{background:var(--navy)}
+.worker-list{display:flex;flex-direction:column;gap:12px}
+.worker-card{
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  padding:14px;
+  background:#fafbfc;
+  position:relative;
+}
+.worker-card:hover{border-color:#93c5fd}
+.worker-card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+}
+.worker-card-head .num{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:26px;height:26px;
+  background:var(--blue);
+  color:#fff;
+  border-radius:50%;
+  font-size:.8rem;
+  font-weight:700;
+  margin-right:8px;
+}
+.worker-card-head .title{
+  font-weight:700;
+  color:var(--navy);
+  font-size:.9rem;
+  display:flex;
+  align-items:center;
+}
+.worker-fields{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.worker-fields .field-full{grid-column:1 / -1}
+@media(max-width:560px){
+  .worker-fields{grid-template-columns:1fr}
+  .worker-fields .field-full{grid-column:1}
+}
+.search-wrap{position:relative}
+.search-wrap input{padding-right:30px}
+.search-ico{position:absolute;right:9px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none;z-index:1}
+.dd{
+  position:fixed;
+  background:#fff;
+  border:1.5px solid var(--border);
+  border-radius:8px;
+  max-height:min(220px, 40vh);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  z-index:9999;
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
+  display:none;
+  min-width:260px;
+  max-width:min(420px, 92vw);
+  overscroll-behavior:contain;
+}
+.dd.open{display:block}
+.dd-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+  padding:9px 12px;
+  cursor:pointer;
+  font-size:.82rem;
+  border-bottom:1px solid #f1f5f9;
+  line-height:1.35;
+}
+.dd-item:last-child{border-bottom:none}
+.dd-item:hover{background:var(--blue-bg)}
+.dd-item .rt{
+  flex-shrink:0;
+  color:var(--blue);
+  font-weight:700;
+  font-size:.78rem;
+  background:var(--blue-bg);
+  padding:1px 7px;
+  border-radius:5px;
+}
+.btn-del{background:#fef2f2;border:none;width:30px;height:30px;border-radius:6px;cursor:pointer;color:var(--red);display:inline-flex;align-items:center;justify-content:center}
+.btn-del:hover{background:#fecaca}
+.btn-del:disabled{opacity:.3;cursor:not-allowed}
+.btn-del svg{width:15px;height:15px}
+
+
+/* Summary */
+.summary{background:#fff;border:none;border-radius:0}
+.srow{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border);font-size:.9rem}
+.srow:last-child{border-bottom:none}
+.srow .l{color:var(--gray);font-weight:500}
+.srow .v{font-weight:700}
+.srow.total{background:var(--navy);color:#fff;padding:14px 16px}
+.srow.total .l{color:rgba(255,255,255,.9);font-weight:600;font-size:.95rem}
+
+.srow.total .v{color:#fff;font-size:1.3rem;font-weight:800}
+.summary-wrap{border:1.5px solid var(--border);border-radius:12px;overflow:hidden;background:#fff}
+.summary-notes{
+  padding:14px 16px 8px;
+  background:#f8fafc;
+  border-top:1px solid var(--border);
+}
+.summary-notes h4{
+  display:flex;align-items:center;gap:7px;
+  color:var(--navy);font-size:.88rem;font-weight:700;margin-bottom:6px;
+}
+.summary-notes h4 svg{width:16px;height:16px;flex-shrink:0}
+.summary-notes ol{padding-left:18px;margin:0;font-size:.78rem;color:var(--gray);line-height:1.45}
+.summary-notes li{margin-bottom:2px}
+.summary-skyline{
+  line-height:0;
+  background:linear-gradient(180deg,#f0f7ff 0%,#dbeafe 100%);
+}
+.summary-skyline svg{width:100%;height:72px;display:block}
+
+
+/* Actions */
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.actions .label{font-weight:700;color:var(--navy);margin-right:auto;display:flex;align-items:center;gap:7px;font-size:.95rem}
+.btn{padding:10px 18px;border-radius:8px;font-size:.88rem;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:background .15s,transform .1s}
+.btn:active{transform:scale(.97)}
+.btn-calc{background:var(--blue);color:#fff;box-shadow:0 3px 10px rgba(26,86,219,.25)}
+.btn-calc:hover{background:var(--navy)}
+.btn-reset{background:#fff;color:var(--gray);border:1.5px solid var(--border)}
+.btn-reset:hover{background:#f1f5f9}
+.btn-quote{background:var(--green);color:#fff;display:none;box-shadow:0 3px 10px rgba(22,163,74,.2)}
+.btn-quote.show{display:inline-flex}
+.btn-quote:hover{background:#15803d}
+
+.err{background:#fef2f2;border:1.5px solid #fecaca;color:var(--red);padding:10px 14px;border-radius:8px;font-size:.86rem;font-weight:500;margin-bottom:12px;display:none}
+.err.show{display:block}
+
+.footer{text-align:center;padding:18px 12px 4px;font-size:.76rem;color:#94a3b8}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(3px);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:20px 12px;overflow-y:auto}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:14px;max-width:620px;width:100%;box-shadow:0 25px 50px rgba(0,0,0,.2);overflow:hidden}
+.q-head{background:linear-gradient(135deg,#0a3a8a,#1565c0);color:#fff;padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start}
+.q-head h2{font-size:1.2rem;font-weight:800;letter-spacing:.02em}
+.q-head .sub{font-size:.78rem;opacity:.9;letter-spacing:.08em;text-transform:uppercase;margin-top:3px;font-weight:500}
+.q-body{padding:18px 22px}
+.q-meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;font-size:.86rem;margin-bottom:14px}
+.q-meta .k{color:var(--gray)}.q-meta .v{font-weight:600}
+.q-table{width:100%;border-collapse:collapse;font-size:.86rem;margin-bottom:16px}
+.q-table th{background:var(--blue-bg);color:var(--navy);font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;padding:9px 11px;text-align:left;border:1px solid #bfdbfe}
+.q-table td{padding:9px 11px;border:1px solid var(--border)}
+.q-table .n{text-align:right;font-weight:600}
+.q-sum{border:1.5px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.q-sum .r{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border);font-size:.9rem}
+.q-sum .r:last-child{border-bottom:none}
+.q-sum .r.g{background:var(--navy);color:#fff;font-weight:800;font-size:1.08rem;padding:14px 16px}
+.q-notes{background:#f0f7ff;border-radius:10px;padding:14px 16px;font-size:.8rem;color:var(--gray);border:1px solid #dbeafe}
+.q-notes h4{color:var(--navy);font-size:.88rem;margin-bottom:6px;font-weight:700}
+.q-notes ol{padding-left:18px}.q-notes li{margin-bottom:3px;line-height:1.4}
+.m-foot{padding:12px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;background:#f8fafc}
+.m-foot button{padding:8px 16px;border-radius:8px;font-weight:600;font-size:.86rem;cursor:pointer}
+.btn-close{background:#fff;border:1.5px solid var(--border);color:var(--gray)}
+.btn-print{background:var(--blue);border:none;color:#fff}
+@media print{
+  @page{margin:10mm;size:A4}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+  html,body{background:#fff!important;padding:0!important;margin:0!important;height:auto!important}
+  body *{visibility:hidden}
+  .overlay,.overlay *{visibility:visible}
+  .overlay{
+    position:absolute!important;
+    inset:0!important;
+    background:#fff!important;
+    padding:0!important;
+    display:block!important;
+    overflow:visible!important;
+  }
+  .modal{
+    box-shadow:none!important;
+    max-width:100%!important;
+    width:100%!important;
+    border-radius:0!important;
+    margin:0!important;
+    overflow:visible!important;
+  }
+  .m-foot{display:none!important}
+  .q-head{
+    background:linear-gradient(135deg,#0a3a8a,#1565c0)!important;
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
+    padding:12px 18px!important;
+  }
+  .q-head h2{font-size:1.05rem!important}
+  .q-head .sub{font-size:.7rem!important;margin-top:1px!important}
+  .q-body{padding:12px 18px!important}
+  .q-meta{gap:2px 16px!important;font-size:.8rem!important;margin-bottom:10px!important}
+  .q-body .sec-title{font-size:.85rem!important;margin-bottom:6px!important}
+  .q-body .sec-icon{width:22px!important;height:22px!important}
+  .q-table{font-size:.78rem!important;margin-bottom:10px!important}
+  .q-table th{padding:6px 8px!important;font-size:.65rem!important}
+  .q-table td{padding:6px 8px!important}
+  .q-sum{margin-bottom:10px!important}
+  .q-sum .r{padding:7px 12px!important;font-size:.82rem!important}
+  .q-sum .r.g{
+    background:#0b3d91!important;
+    color:#fff!important;
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
+    padding:10px 12px!important;
+    font-size:.95rem!important;
+  }
+  .q-table th{
+    background:#eef4ff!important;
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
+  }
+  .q-notes{
+    background:#f0f7ff!important;
+    -webkit-print-color-adjust:exact!important;
+    print-color-adjust:exact!important;
+    padding:10px 12px!important;
+    font-size:.72rem!important;
+  }
+  .q-notes h4{font-size:.8rem!important;margin-bottom:4px!important}
+  .q-notes li{margin-bottom:1px!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-main">
+    <div class="header-left">
+      <div class="logo">
+        <svg viewBox="0 0 40 40" fill="none"><path d="M8 28V18c0-4 4-8 12-10 8 2 12 6 12 10v10" stroke="#fff" stroke-width="2.2" fill="none"/><ellipse cx="20" cy="10" rx="11" ry="4.5" fill="#fff" opacity=".9"/><rect x="16.5" y="5.5" width="7" height="5" rx="1.5" fill="#93c5fd"/></svg>
+      </div>
+      <div>
+        <h1>Workmen Compensation<br>Premium Calculator</h1>
+        <div class="badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 10h8M8 14h5"/></svg>
+          Quick and Accurate as per WC Tariff
+        </div>
+      </div>
+    </div>
+    
+
+    </div>
+    <div class="header-skyline" aria-hidden="true">
+      <svg viewBox="0 0 900 56" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0.12"/>
+          </linearGradient>
+          <linearGradient id="hillGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#7eb6e8" stop-opacity="0.55"/>
+            <stop offset="100%" stop-color="#5a9fd4" stop-opacity="0.35"/>
+          </linearGradient>
+        </defs>
+        <!-- soft sky fade -->
+        <rect x="0" y="0" width="900" height="56" fill="url(#skyGrad)"/>
+        <!-- sun -->
+        <circle cx="720" cy="18" r="14" fill="#fbbf24" opacity="0.85"/>
+        <circle cx="720" cy="18" r="20" fill="#fbbf24" opacity="0.2"/>
+        <!-- back hills -->
+        <path d="M0 48 Q80 28 160 42 T320 38 T480 44 T640 36 T800 42 T900 40 L900 56 L0 56 Z" fill="url(#hillGrad)"/>
+        <!-- front hills -->
+        <path d="M0 50 Q100 36 200 48 T400 46 T600 50 T780 44 T900 48 L900 56 L0 56 Z" fill="#93c5fd" opacity="0.4"/>
+        <!-- crane left-center -->
+        <g fill="#bfdbfe" opacity="0.7">
+          <!-- tower -->
+          <rect x="380" y="8" width="3" height="40"/>
+          <!-- jib -->
+          <rect x="350" y="10" width="70" height="2.5"/>
+          <!-- counter jib -->
+          <rect x="382" y="10" width="25" height="2"/>
+          <!-- hook cable -->
+          <rect x="355" y="12" width="1.2" height="18"/>
+          <rect x="352" y="29" width="7" height="2" rx="0.5"/>
+          <!-- base -->
+          <rect x="375" y="46" width="13" height="4"/>
+        </g>
+        <!-- unfinished building frames -->
+        <g fill="none" stroke="#bfdbfe" stroke-width="1.4" opacity="0.65">
+          <!-- building 1 -->
+          <rect x="480" y="22" width="36" height="28"/>
+          <line x1="480" y1="32" x2="516" y2="32"/>
+          <line x1="480" y1="40" x2="516" y2="40"/>
+          <line x1="492" y1="22" x2="492" y2="50"/>
+          <line x1="504" y1="22" x2="504" y2="50"/>
+          <!-- building 2 taller -->
+          <rect x="530" y="12" width="42" height="38"/>
+          <line x1="530" y1="24" x2="572" y2="24"/>
+          <line x1="530" y1="34" x2="572" y2="34"/>
+          <line x1="530" y1="44" x2="572" y2="44"/>
+          <line x1="544" y1="12" x2="544" y2="50"/>
+          <line x1="558" y1="12" x2="558" y2="50"/>
+          <!-- building 3 -->
+          <rect x="585" y="28" width="30" height="22"/>
+          <line x1="585" y1="36" x2="615" y2="36"/>
+          <line x1="585" y1="42" x2="615" y2="42"/>
+          <line x1="595" y1="28" x2="595" y2="50"/>
+          <line x1="605" y1="28" x2="605" y2="50"/>
+          <!-- small building left -->
+          <rect x="200" y="30" width="28" height="20"/>
+          <line x1="200" y1="38" x2="228" y2="38"/>
+          <line x1="209" y1="30" x2="209" y2="50"/>
+          <line x1="219" y1="30" x2="219" y2="50"/>
+          <!-- mid left frame -->
+          <rect x="250" y="20" width="34" height="30"/>
+          <line x1="250" y1="30" x2="284" y2="30"/>
+          <line x1="250" y1="40" x2="284" y2="40"/>
+          <line x1="261" y1="20" x2="261" y2="50"/>
+          <line x1="273" y1="20" x2="273" y2="50"/>
+        </g>
+        <!-- solid silhouette buildings far right -->
+        <g fill="#93c5fd" opacity="0.45">
+          <rect x="640" y="26" width="22" height="24" rx="1"/>
+          <rect x="668" y="18" width="18" height="32" rx="1"/>
+          <rect x="690" y="30" width="26" height="20" rx="1"/>
+          <rect x="100" y="34" width="20" height="16" rx="1"/>
+          <rect x="130" y="28" width="16" height="22" rx="1"/>
+        </g>
+        <!-- ground line -->
+        <rect x="0" y="50" width="900" height="6" fill="#dbeafe" opacity="0.5"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="card">
+    <!-- Policy -->
+    <div class="section">
+      <div class="sec-title">
+        <span class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+        Policy Details
+      </div>
+      <div class="row2">
+        <div>
+          <label>Coverage Period (Months) <span class="req">*</span></label>
+          <select id="coverageMonths">
+            <option value="1">1 Month</option><option value="2">2 Months</option><option value="3">3 Months</option>
+            <option value="4">4 Months</option><option value="5">5 Months</option><option value="6">6 Months</option>
+            <option value="7">7 Months</option><option value="8">8 Months</option><option value="9">9 Months</option>
+            <option value="10">10 Months</option><option value="11">11 Months</option>
+            <option value="12" selected>12 Months</option>
+            <option value="13">13 Months</option><option value="14">14 Months</option><option value="15">15 Months</option>
+            <option value="16">16 Months</option><option value="17">17 Months</option><option value="18">18 Months</option>
+            <option value="19">19 Months</option><option value="20">20 Months</option><option value="21">21 Months</option>
+            <option value="22">22 Months</option><option value="23">23 Months</option><option value="24">24 Months</option>
+          </select>
+        </div>
+        <div>
+          <label>Medical Expenses Extension</label>
+          <select id="medicalExt" onchange="toggleMed()">
+            <option value="No" selected>No</option>
+            <option value="Yes">Yes</option>
+          </select>
+        </div>
+      </div>
+      <div id="medRow" style="display:none;margin-top:12px;max-width:320px">
+        <label>Medical SI</label>
+        <select id="medicalSI">
+          <option value="25000">₹25,000 (10%)</option>
+          <option value="50000">₹50,000 (15%)</option>
+          <option value="100000">₹1,00,000 (35%)</option>
+        </select>
+      </div>
+      <div class="row2" style="margin-top:12px">
+        <div>
+          <label>Special Discount on Basic Premium (%)</label>
+          <input type="number" id="basicDiscount" value="0" min="0" max="100" step="0.01"/>
+        </div>
+        <div>
+          <label>Special Discount on Medical Expenses (%)</label>
+          <input type="number" id="medicalDiscount" value="0" min="0" max="100" step="0.01"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Workers -->
+    <div class="section">
+      <div class="toolbar">
+        <div class="sec-title" style="margin:0">
+          <span class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></span>
+          Worker Details
+        </div>
+        <button class="btn-add" onclick="addCat()">+ Add Worker Category</button>
+      </div>
+      <div class="worker-list" id="workerList"></div>
+    </div>
+
+    <!-- Summary -->
+    <div class="section">
+      <div class="actions" style="margin-bottom:16px">
+        <button class="btn btn-calc" onclick="calc()">Calculate Premium</button>
+        <button class="btn btn-reset" onclick="resetAll()">Reset All</button>
+        <button class="btn btn-quote" id="btnQ" onclick="quote()">Generate Quotation</button>
+      </div>
+      <div class="sec-title">
+        <span class="sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg></span>
+        Premium Summary
+      </div>
+      <div class="err" id="err"></div>
+      <div class="summary-wrap">
+        <div class="summary">
+          <div class="srow"><span class="l">Net Annual Premium</span><span class="v" id="sAnnual">—</span></div>
+          <div class="srow"><span class="l">Medical Extension Premium</span><span class="v" id="sMedical">—</span></div>
+          <div class="srow"><span class="l">Coverage Period</span><span class="v" id="sPeriod">12 Months</span></div>
+          <div class="srow"><span class="l">Net Premium After Discounts</span><span class="v" id="sNet">—</span></div>
+          <div class="srow"><span class="l">GST @ 18%</span><span class="v" id="sGST">—</span></div>
+          <div class="srow total"><span class="l">Total Premium (Incl. GST)</span><span class="v" id="sTotal">—</span></div>
+        </div>
+        <div class="summary-notes">
+          <h4>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Notes:
+          </h4>
+          <ol>
+            <li>This is only a premium indication based on Workmen Compensation (WC) Tariff.</li>
+            <li>Final premium is subject to insurer's underwriting and prevailing rules.</li>
+            <li>Medical Expenses Extension, if opted, will be subject to policy terms and conditions.</li>
+            <li>This quotation is valid for 30 days from the date of issue.</li>
+          </ol>
+        </div>
+        <div class="summary-skyline" aria-hidden="true">
+          <svg viewBox="0 0 800 72" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="sgHill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#93c5fd" stop-opacity="0.5"/>
+                <stop offset="100%" stop-color="#60a5fa" stop-opacity="0.25"/>
+              </linearGradient>
+            </defs>
+            <!-- sun -->
+            <circle cx="680" cy="22" r="16" fill="#fbbf24" opacity="0.7"/>
+            <circle cx="680" cy="22" r="24" fill="#fbbf24" opacity="0.2"/>
+            <!-- hills -->
+            <path d="M0 58 Q100 40 200 52 T400 48 T600 54 T800 50 L800 72 L0 72 Z" fill="url(#sgHill)"/>
+            <path d="M0 62 Q150 50 300 60 T600 58 T800 62 L800 72 L0 72 Z" fill="#93c5fd" opacity="0.35"/>
+            <!-- crane -->
+            <g fill="#64748b" opacity="0.55">
+              <rect x="310" y="8" width="2.5" height="52"/>
+              <rect x="280" y="10" width="70" height="2"/>
+              <rect x="312" y="10" width="22" height="1.5"/>
+              <rect x="285" y="12" width="1.2" height="20"/>
+              <rect x="282" y="30" width="8" height="2" rx="0.5"/>
+              <rect x="305" y="56" width="12" height="4"/>
+            </g>
+            <!-- frame buildings -->
+            <g fill="none" stroke="#64748b" stroke-width="1.3" opacity="0.5">
+              <rect x="400" y="28" width="32" height="36"/>
+              <line x1="400" y1="40" x2="432" y2="40"/>
+              <line x1="400" y1="50" x2="432" y2="50"/>
+              <line x1="411" y1="28" x2="411" y2="64"/>
+              <line x1="422" y1="28" x2="422" y2="64"/>
+              <rect x="445" y="16" width="40" height="48"/>
+              <line x1="445" y1="28" x2="485" y2="28"/>
+              <line x1="445" y1="40" x2="485" y2="40"/>
+              <line x1="445" y1="52" x2="485" y2="52"/>
+              <line x1="458" y1="16" x2="458" y2="64"/>
+              <line x1="471" y1="16" x2="471" y2="64"/>
+              <rect x="498" y="32" width="28" height="32"/>
+              <line x1="498" y1="42" x2="526" y2="42"/>
+              <line x1="498" y1="52" x2="526" y2="52"/>
+              <line x1="507" y1="32" x2="507" y2="64"/>
+              <line x1="517" y1="32" x2="517" y2="64"/>
+            </g>
+            <!-- solid silhouettes -->
+            <g fill="#64748b" opacity="0.35">
+              <rect x="80" y="40" width="22" height="24" rx="1"/>
+              <rect x="110" y="30" width="18" height="34" rx="1"/>
+              <rect x="560" y="36" width="20" height="28" rx="1"/>
+              <rect x="590" y="24" width="26" height="40" rx="1"/>
+              <rect x="720" y="38" width="24" height="26" rx="1"/>
+            </g>
+            <rect x="0" y="64" width="800" height="8" fill="#dbeafe" opacity="0.6"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">Created by Amal Vinoy under the guidance of Sri Bharat S Anand</div>
+</div>
+
+<!-- Quotation Modal -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <div class="q-head">
+      <div>
+        <h2>WORKMEN COMPENSATION</h2>
+        <div class="sub">Premium Quotation</div>
+      </div>
+    </div>
+    <div class="q-body" id="qContent"></div>
+    <div class="m-foot">
+      <button class="btn-close" onclick="closeQ()">Close</button>
+      <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const TARIFFS = [{"trade":"Advertisement Contractors Bill Posters and Distributors","rate":12.15},{"trade":"Agricultural Farms","rate":5.85},{"trade":"Aerated Water Manufacturers","rate":15.1},{"trade":"Aircraft Manufacture of (a) Pilots and employees who may at any time fly)","rate":121.6},{"trade":"Aircraft Manufacture of (b) Wood-working machinists excl. travelling in Aircraft)","rate":30.15},{"trade":"Aircraft Manufacture of (c) All employees excl. travelling in Aircraft)","rate":21.4},{"trade":"Aluminium Goods Manufacture (Foundry hands, incl. Stampers)","rate":36.5},{"trade":"Aluminium Goods Manufacture (All other employees)","rate":15.1},{"trade":"Aluminium Powder and Paste Manufacturers","rate":72.95},{"trade":"Analytical Chemists","rate":7.8},{"trade":"Animal (wild) (Catching, keeping, training or working)","rate":60.8},{"trade":"Antimony Smelters and/or Extractors","rate":30.15},{"trade":"Architects","rate":5.85},{"trade":"Artificial Stone Makers (All others)","rate":30.15},{"trade":"Asbestos Cement Manufacturers (If Application work is done)","rate":30.15},{"trade":"Asbestos Cement Manufacturers (If no Application work is done)","rate":12.15},{"trade":"Athletic, Fishing, Gymnastic, Cricket and Golf Goods Manufacturers (Wood working machinists)","rate":30.15},{"trade":"Athletic, Fishing, Gymnastic, Cricket and Golf Goods Manufacturers (All others employees)","rate":36.5},{"trade":"Auctioneers (Surveying and inventory making clerks)","rate":5.85},{"trade":"Auctioneers (Others clerks)","rate":2.45},{"trade":"Auctioneers (Porters and assistants excl. risk connection with horses and livestock)","rate":18.5},{"trade":"Auctioneers (Porters and assistants for horses and livestock)","rate":60.8},{"trade":"Aviation Companies of Firms engaged in flying only and where no manufacture is carried on (Pilots and employees who may at any time fly)","rate":97.3},{"trade":"Aviation Companies of Firms engaged in flying only and where no manufacture is carried on (All other employees)","rate":12.15},{"trade":"Badami Compressed Coal Manufactures","rate":24.3},{"trade":"Bakelite and Bakelite Goods Makers (as separate trade)","rate":12.15},{"trade":"Bakeries and Biscuit Factories (Employees engaged with Machinery)","rate":12.15},{"trade":"Bakeries and Biscuit Factories (All Employees not engaged with Machinery)","rate":5.85},{"trade":"Bamboo and Bentwood Furniture Makers (Woodworking machinists)","rate":30.15},{"trade":"Bamboo and Bentwood Furniture Makers (All other employees)","rate":12.15},{"trade":"Barge, Boat, Launch and Yatch only Builders (Woodworking machinists)","rate":30.15},{"trade":"Barge, Boat, Launch and Yatch only Builders (All other employees)","rate":18.5},{"trade":"Barometer Hydrometer, Thermometer, Mathematical, Nautical and Surgical Instruments and Appliance Makers, Watchmakers and Opticians (All Employees)","rate":5.85},{"trade":"Basket Makers (Osier and willow cutting)","rate":18.5},{"trade":"Basket Makers (Woodworking machinists)","rate":30.15},{"trade":"Basket Makers (All other employees)","rate":9.25},{"trade":"Battery Service Station (All employees excl. batteries makers and erectors)","rate":15.1},{"trade":"Bedding and Mattress Manufacturers (Excl. wire risk)","rate":9.25},{"trade":"Bedding and Mattress Manufacturers (Wire mattresses: Woodworking machinists)","rate":30.15},{"trade":"Bedding and Mattress Manufacturers (Wire mattresses: All other employees incl. wire risk)","rate":18.5},{"trade":"Bedstead Manufacturers (Metal)","rate":15.1},{"trade":"Belting Manufacturers","rate":12.15},{"trade":"Billiard Makers and Billiard Saloons","rate":9.25},{"trade":"Billiard Tables Makers (Woodworking machinists)","rate":30.15},{"trade":"Billiard Tables Makers (All other employees)","rate":12.15},{"trade":"Billposters and Distributor","rate":30.15},{"trade":"Bitumen Lined Paper Manufacturers (All other employees)","rate":30.15},{"trade":"Bitumen refineries","rate":54.5},{"trade":"Blacking and Boot, Metal and furniture polish Mfgrs","rate":15.1},{"trade":"Blacksmiths and Farriers","rate":18.5},{"trade":"Blast Furnaces (iron production)","rate":67.1},{"trade":"Bobbin and Shuttle Makers, Wooden (Woodworking machinists)","rate":30.15},{"trade":"Bobbin and Shuttle Makers, Wooden (All other employees)","rate":18.5},{"trade":"Boiler Makers and Repairers (Incl. Erection)","rate":36.5},{"trade":"Boiler scalers","rate":72.95},{"trade":"Bone mills (Incl. Anthrax)","rate":27.25},{"trade":"Bone mills (Excl. Anthrax)","rate":21.4},{"trade":"Bookbinder (with or without machinery)","rate":9.25},{"trade":"Boot & Shoe Manufacturers and Factories (Wholesale)","rate":18.5},{"trade":"Boot & Shoe Dealers, Makers and Repairers (Retail)","rate":5.85},{"trade":"Brass Founders, Workers and Finishers (Foundry hands)","rate":24.3},{"trade":"Brass Founders, Workers and Finishers (All other employees)","rate":12.15},{"trade":"Brass Founders, Workers and Finishers (the trade and maintenance staff)","rate":9.25},{"trade":"Brick and Tile Makers (getting below 6 metres)","rate":15.1},{"trade":"Brick and Tile Makers (getting below 6 metres)","rate":24.3},{"trade":"Brick and Tile Makers (below 6 metres excl. pit or mine)","rate":36.5},{"trade":"Wood-working machinists","rate":30.15},{"trade":"All other employees (excl. Anthrax)","rate":5.85},{"trade":"Brush Manufacturers (All other employees (incl. Anthrax))","rate":9.25},{"trade":"Builders (Excl. blasting and tunneling)","rate":30},{"trade":"Builders (Incl. blasting and tunneling)","rate":72.95},{"trade":"Steeple, Tower and chimney shaft builders or repairers","rate":97.3},{"trade":"Builders, Material and Stone, Slate and Pottery Dealers (Employees engaged in loading and unloading vessels)","rate":97.3},{"trade":"Builders, Material and Stone, Slate and Pottery Dealers (All other employees)","rate":24.3},{"trade":"Metal","rate":6.25},{"trade":"Other than Metal","rate":14.85},{"trade":"Cabinet Makers (Woodworking machinists)","rate":30.15},{"trade":"Cabinet Makers (All other employees)","rate":9.25},{"trade":"Candle Manufacturers and Tallow Candlers","rate":24.3},{"trade":"Canneries (Tin making)","rate":30.15},{"trade":"Canneries (All other employees)","rate":18.5},{"trade":"Canvas and webbing equipments manufacturers (Where carried on as a separate trade)","rate":24.3},{"trade":"Canvas and webbing equipments manufacturers (Where carried on in a Cotton jute mill)","rate":7.8},{"trade":"Canvassers","rate":3.9},{"trade":"Card, Cardboard, Strawboard and Millboard Makers","rate":30.15},{"trade":"Cardboard Box and Paper Box Manufacturers (Machinists)","rate":15.1},{"trade":"Cardboard Box and Paper Box Manufacturers (All other employees)","rate":12.15},{"trade":"Cardboard Box and Paper Box Manufacturers (is to be applied under regulation II))","rate":5.85},{"trade":"Carman and Cartage and Contractors (Incl. Motor Transport companies (not passenger carrying))","rate":42.8},{"trade":"Carbon Papers, Typewriter Ribbons, Inks and Stamp Pad Mfgrs. (Woodworking machinist)","rate":30.15},{"trade":"Carbon Papers, Typewriter Ribbons, Inks and Stamp Pad Mfgrs. (All other employees)","rate":18.5},{"trade":"Carpenters and joiners - who only undertake contracts for woodwork (Woodworking machinist)","rate":30.15},{"trade":"Carpenters and joiners - who only undertake contracts for woodwork (All other employees)","rate":9.25},{"trade":"Carpet and Rug Mfgtrs. Sorters (Incl. Anthrax)","rate":24.3},{"trade":"Carpet and Rug Mfgtrs. Sorters (Excl. Anthrax)","rate":12.15},{"trade":"Carpet and Rug Mfgtrs. Sorters (All other employees, hand work only)","rate":12.15},{"trade":"Carpet and Rug Mfgtrs. Sorters (All other employees, engaged in machinery)","rate":24.3},{"trade":"Carriage Gharry and/or Livery Stable Proprietors (Not undertaking carriage contracts)","rate":30.15},{"trade":"Carvers in Stone, Masons and Monumental Masons where carried on as a separate trade (All Others)","rate":24.3},{"trade":"Carvers in Stone, Masons and Monumental Masons where carried on as a separate trade (and/or Rigs engaged solely upon catering duties)","rate":72.95},{"trade":"Celluloid and Celluloid goods makers","rate":48.65},{"trade":"Cement Hollow Block Mfgrs. (Where no machinery is used)","rate":12.15},{"trade":"Cement Hollow Block Mfgrs. (Where any machinery is used)","rate":21.4},{"trade":"Cement Works (Risks to be rated Separately))","rate":42.8},{"trade":"Chair Makers (Woodworking machinists)","rate":30.15},{"trade":"Chair Makers (All other employees)","rate":12.15},{"trade":"Chemical Works (soda works)","rate":18.5},{"trade":"Chemists and Druggists (Manufacturing) and Patent Medicine Mfgrs.","rate":7.8},{"trade":"Christmas Cracker Makers","rate":18.5},{"trade":"Cinchona Estates (Employees on Factory Register)","rate":5.85},{"trade":"Cinchona Estates (or garden register who are paid wholly by estate)","rate":2.9},{"trade":"Cinchona Estates (All other employees)","rate":2.9},{"trade":"Cinematograph Theaters and Exhibitors (film production)","rate":3.9},{"trade":"Cinematograph Film Producers - 74 To be submitted for special rating Circus, Fair Pleasure Ground Proprietors (All employees)","rate":60.8},{"trade":"Engaged in trade on mercantile employment (Duties strictly limited to indoor clerical work)","rate":2.45},{"trade":"(Wholesale)","rate":5.85},{"trade":"Club Servants (All employees incl. Waiters and Wheelwrights -)","rate":4.35},{"trade":"Club Servants (and Repairing Woodworking machinists)","rate":30.15},{"trade":"Club Servants (All other employees)","rate":15.1},{"trade":"Coal Merchants & Dealers (Employees engaged in loading and discharging vessels)","rate":97.3},{"trade":"Coal Merchants & Dealers (Carters and all other employees)","rate":45.7},{"trade":"Cocoa Fibre Works, Mat and Matting Makers","rate":5.85},{"trade":"Coffee Curing works Where carried on as a separate trade (Employees engaged inside the factory)","rate":5.85},{"trade":"Coffee Curing works Where carried on as a separate trade (Woodworking machinists)","rate":30.15},{"trade":"Coffee Curing works Where carried on as a separate trade (Employees engaged outside the factory)","rate":2.9},{"trade":"Coffee Estate (Domestic Servants whose names appear on the Factory or garden register who are paid wholly by estate)","rate":2.9},{"trade":"Coffee Estate (All other employees)","rate":4.35},{"trade":"Coffee Roasters and Essence Mfgrs.","rate":5.85},{"trade":"Coir Presses (Press employees)","rate":15.1},{"trade":"Godown coolies (not engaged in delivering for shipment)","rate":5.85},{"trade":"Coke Mfgrs. (Incl. erecting of ovens)","rate":18.5},{"trade":"Cold Storage Warehouses","rate":18.5},{"trade":"Whole Risk (Fiery) Pits","rate":72.95},{"trade":"Inclines & Levels (Minimum premium Rs. 800)","rate":60.8},{"trade":"Fatal Only (Fiery) Pits","rate":54.5},{"trade":"Inclines & Levels (Minimum of Rs. 480)","rate":45.7},{"trade":"Minimum premium Rs. 480 337A Commercial Travellers (Employees using Motor Cycles/Scooters)","rate":18.25},{"trade":"Minimum premium Rs. 480 337A Commercial Travellers (All other employees)","rate":3.9},{"trade":"Confectioners (Employees engaged with machinery)","rate":12.15},{"trade":"Confectioners (Employees not engaged with machinery)","rate":5.85},{"trade":"Confectioners (drives machines and/or chemical is used)","rate":18.5},{"trade":"Coopers & Vat Makers (Woodworking machinists)","rate":30.15},{"trade":"Coopers & Vat Makers (All other employees)","rate":12.15},{"trade":"Copper T Manufacture","rate":5.85},{"trade":"Cordial (Fruit) and Canned Fruit Mfgrs. (Employees engaged in agricultural work on Fruit Farm of Fruit Cordial and Canned Fruit)","rate":5.85},{"trade":"Cordial (Fruit) and Canned Fruit Mfgrs. (If aerated waters are manufactured)","rate":15.1},{"trade":"Cordial (Fruit) and Canned Fruit Mfgrs. (If no aerated waters are manufactured)","rate":12.15},{"trade":"Coal and Geological Drilling (On land)","rate":15.1},{"trade":"Coal and Geological Drilling (On River Beds)","rate":36.5},{"trade":"See Flour Mills 169 Cotton Mills (All process incl. Mill Godowns)","rate":7.8},{"trade":"Calcutta and Delhi Region","rate":27.75},{"trade":"Other Regions","rate":12.15},{"trade":"Cotton Godowns and Warehouses","rate":30.15},{"trade":"Cotton Bales, loading and unloading into Railway Wagons, incl. delivery (where delivery undertaken by an Independent Contractor, the rate for \"Carmen and Cartage Contractors\" to apply)","rate":30.15},{"trade":"Cotton Wadding Mfgrs.-","rate":24.3},{"trade":"Cotton Waste Merchants (All employees)","rate":18.5},{"trade":"Crane Drivers","rate":36.5},{"trade":"Crews of Country Craft plying between coastal Ports","rate":121.6},{"trade":"Cycle and Motor Cycles Makers, and Repairers, and Cycle Components and accessories makers with (or without machinery)","rate":15.1},{"trade":"Dairies (Wholesale)","rate":15.1},{"trade":"Dairies (Shop Risks)","rate":7.8},{"trade":"Dairies (by hand, handcraft, Cycle or tricycle)","rate":9.25},{"trade":"Dairies (Otherwise, but excl. loading and unloading of craft or vessels)","rate":18.5},{"trade":"Dentists (With or without Mechanics)","rate":9.25},{"trade":"Dentists (Incl. Engraving)","rate":21.4},{"trade":"Disinfectant Mfgrs. (Excl. Dyewood Grinders)","rate":12.15},{"trade":"Distilleries","rate":12.15},{"trade":"Divers","rate":170.25},{"trade":"Dock service under takings (Excl. Stevedores and/or repairs)","rate":36.5},{"trade":"Dock Pier and Wharf construction maintenance (Maintenance and/or repairs)","rate":36.5},{"trade":"Dock Pier and Wharf construction maintenance (Construction (excl. blasting ))","rate":48.65},{"trade":"Dock Pier and Wharf construction maintenance (Employees engaged in blasting In private residences or in personal service of employer Of proprietors per capita)","rate":97.3},{"trade":"Residence in boarding house club or hotel (not in employee Bearers, Khitmatgars, Hamals, Cooks, Sweepers and Mehters","rate":4.9},{"trade":"Mali","rate":7.3},{"trade":"Syce (Horse)","rate":14.6},{"trade":"Motor Car Driver, Cleaners and attendants","rate":24.3},{"trade":"Doctors' Dispensers, Assistants and Locum Tenens","rate":5.85},{"trade":"Dry Ice Mfgrs.","rate":36.5},{"trade":"Dyers, Dressers and Mercerisers","rate":18.5},{"trade":"Dyewood Grinders","rate":18.5},{"trade":"Dye Grinding and Mixing Works (powdered and subsequently mixed))","rate":12.15},{"trade":"Dye Grinding and Mixing Works (Clerical Staff)","rate":2.45},{"trade":"Masters, Mistresses and male and female assistants","rate":2.9},{"trade":"All other employees","rate":4.35},{"trade":"Electricity (All employees inside and out)","rate":21.4},{"trade":"Electrical Engineers (not manufacturers) Installation and repair of plant, fittings and Appartus incl. wireless, telephone and telegraph (Work on ships and underground in mines and quarries of railway station over 9 metres height or where any unit)","rate":36.5},{"trade":"Electrical Engineers (not manufacturers) Installation and repair of plant, fittings and Appartus incl. wireless, telephone and telegraph (is handled exceeding 12.7 Kilogram in weight)","rate":21.4},{"trade":"Work other buildings and roofs of railway station over 9 metres height or where any unit is handled exceeding 12.7 Kilogram in weight","rate":18.5},{"trade":"Shop and yard risk only (weight when completed for use)","rate":18.5},{"trade":"Shop and yard risk only (weight when completed for use)","rate":12.15},{"trade":"Rate as Electrical Engineers (not manufacturers) Batteries Accumulator and storage batteries makers and erectors","rate":18.5},{"trade":"Dry Battery and portable electric and torch makers, (button cell Mfgrs.)","rate":9.25},{"trade":"Electric Cables, Makers and suppliers of incl. Cablelaying, installation and Erection work (Shop or yard risk only incl. Carrying)","rate":15.1},{"trade":"Electric Cables, Makers and suppliers of incl. Cablelaying, installation and Erection work (All work away from shop or yard)","rate":60.8},{"trade":"Electric Sign Makers (Erection)","rate":72.95},{"trade":"Electric Sign Makers (All other work)","rate":18.5},{"trade":"(i) Service men using motor cycles","rate":18.5},{"trade":"(ii) All other employees","rate":9.25},{"trade":"(b) Commercial purposes","rate":22.1},{"trade":"Electro-Silver and Nickel Plate Manufacturers and Metal Polishers and Platers","rate":9.25},{"trade":"Telephone Operators","rate":5.85},{"trade":"Tuition and demonstration","rate":30.15},{"trade":"Elephants - catching, training keeping or working To be submitted special rating Embroidery Mills (All other employees)","rate":7.8},{"trade":"Emery Cloth, Glass and sand Paper and cleaning Powder Mfgrs.-","rate":15.1},{"trade":"Metal only","rate":18.5},{"trade":"All other materials","rate":30.15},{"trade":"Bridge building (in height from road or water level at low tide)","rate":36.5},{"trade":"Bridge building (in height from road or water level at low tide)","rate":60.8},{"trade":"(iii) Column and Girder (a) Shop or yard risk","rate":42.8},{"trade":"(b) Erection away from shop or yard","rate":60.8},{"trade":"Colliery and Mining Machinery (Shop or Yard risk only, incl. Carting)","rate":21.4},{"trade":"Fixing, repairing, excl. sinking add chimney shaft erecting","rate":24.3},{"trade":"Cranes (Shop or yard risk only)","rate":36.5},{"trade":"Cranes (All work away from Shop or yard)","rate":60.8},{"trade":"Gasometers and Tanks (Shop or yard risk only, incl. Carting)","rate":36.5},{"trade":"Gasometers and Tanks (All work away from Shop or yard and erecting)","rate":72.95},{"trade":"Gasometers and Tanks (Shop or yard risk only)","rate":36.5},{"trade":"Erecting away from Shop or yard","rate":24.3},{"trade":"( see Regulation page 12) (Shop or yard risk only)","rate":21.4},{"trade":"( see Regulation page 12) (Work away from Shop or yard excl. shaft sinking)","rate":24.3},{"trade":"Shaft sinking of the work))","rate":170.25},{"trade":"(Note : The aforementioned rates are applicable to Lightest risk only. It is advisable that each Risk be rated according to the nature Engineers not otherwise classified (Incl. work away from shop or yard upto 9 mtrs height)","rate":27.25},{"trade":"(Note : The aforementioned rates are applicable to Lightest risk only. It is advisable that each Risk be rated according to the nature Engineers not otherwise classified (Incl. work away from shop or yard exceeding 9 mts high)","rate":60.8},{"trade":"(Note : The aforementioned rates are applicable to Lightest risk only. It is advisable that each Risk be rated according to the nature Engineers not otherwise classified (Excl. use of explosives blasting, Tunnelling and quarrying)","rate":30},{"trade":"(Note : The aforementioned rates are applicable to Lightest risk only. It is advisable that each Risk be rated according to the nature Engineers not otherwise classified (Incl. blasting and tunelling)","rate":72.95},{"trade":"Nitroglycerine based Explosives","rate":75},{"trade":"Non- Nitroglycerine based Explosives","rate":60},{"trade":"Slurry Explosives","rate":60},{"trade":"Feathers Manufacturers, Dressers, Purifiers and Merchants","rate":7.8},{"trade":"Mechanically propelled and 50 tons net tonnage or over","rate":30.15},{"trade":"Ferry & Launch Owners (excl. towing) Mechanically propelled and under 50 tons net tonnage","rate":48.65},{"trade":"Otherwise than Mechanically Propelled","rate":72.95},{"trade":"(on total sums paid)","rate":72.95},{"trade":"Fire Extinguishing Appliances Makers","rate":24.3},{"trade":"Fire Loss Assessors","rate":24.3},{"trade":"Fire Work Mfgrs. (Where hand power only is used)","rate":97.3},{"trade":"Fire Work Mfgrs. (Where any mechanically driven machinery is used)","rate":121.6},{"trade":"Fish Dehydrating","rate":24.3},{"trade":"Flag, Banner and Bunting Makers (Excl. erection, decoration tents and mosques)","rate":12.15},{"trade":"Flag, Banner and Bunting Makers (Incl. Erection)","rate":24.3},{"trade":"Floorcloth Linoleum Mfgrs.","rate":30.15},{"trade":"Flour and Dal Mills","rate":15.1},{"trade":"Forge Masters","rate":30.15},{"trade":"Forwarding and Shipping Agent's Receiving Offices, Depots and Godowns (All other employees)","rate":15.1},{"trade":"Frozen Food Mfgrs.","rate":18.5},{"trade":"Furniture Dealers and Removers and Depository Proprietors (Retail Shop and Excl. Delivery and Cartage)","rate":12.15},{"trade":"Removers and Depository hands","rate":36.5},{"trade":"Sheet Metal","rate":30.15},{"trade":"Other than Sheet Metal (Woodworking machinists)","rate":30.15},{"trade":"Other than Sheet Metal (All other employees)","rate":9.25},{"trade":"Furriers (Retail Shop risk)","rate":7.8},{"trade":"Wholesale dealers: (Excl. handling of raw skins)","rate":10.7},{"trade":"Wholesale dealers: (Incl. handling of raw skins)","rate":15.1},{"trade":"Galvanising (Where carried on as separate trade)","rate":30.15},{"trade":"Gas mantle (incandescent) makers","rate":9.25},{"trade":"Coal (repairing demolishers)","rate":2.15},{"trade":"Oxygen-and other gases","rate":18.5},{"trade":"Gasometer painting and repairing","rate":72.95},{"trade":"Gas proofing of material when carried on as a separate Trade","rate":12.15},{"trade":"Gelatins, Glue, Size and Isinglass Mfgrs","rate":24.3},{"trade":"Ghee Mfgrs-","rate":9.25},{"trade":"Stained (Excl. erection and lead poisoning)","rate":10.7},{"trade":"Stained (Incl. erection and lead poisoning)","rate":21.4},{"trade":"Stained (Domestic articles such as glasses and decanters)","rate":10.7},{"trade":"Bottle","rate":9.25},{"trade":"Sheet and Plate","rate":12.15},{"trade":"Bevellers and Silverers","rate":15.1},{"trade":"Embossers, Gliders, Decorators and Glass Sign writers (incl. Erection)","rate":15.1},{"trade":"Residences, offices and shops","rate":21.4},{"trade":"Other risks","rate":24.3},{"trade":"Gliding Association - Non flying employees","rate":24.3},{"trade":"Godwons ( See Warehouses) Gold and Silver Thread Lametta & Lace Mfgrs.","rate":15.1},{"trade":"Golf Clubs (All employees incl. stewards servants and Caddies)","rate":5.85},{"trade":"Golf Clubs (Caddies only, per member on total membership)","rate":0.3},{"trade":"Golf Clubs (per players)","rate":3.7},{"trade":"Golf Clubs (Visitors liability in respect of caddies, per visitor)","rate":0.1},{"trade":"Elevator Employees","rate":60.8},{"trade":"Corn, Flour, Hay, Straw, Fodder, Seed and Grain merchants and Forage Contractors (delivery other than by hand or cart)","rate":18.5},{"trade":"Corn, Flour, Hay, Straw, Fodder, Seed and Grain merchants and Forage Contractors (vessels and carting and delivery other than by hand or cart)","rate":21.4},{"trade":"Corn, Flour, Hay, Straw, Fodder, Seed and Grain merchants and Forage Contractors (All Employees engaged in loading and discharging vessels)","rate":97.3},{"trade":"Grain Godown and Warehouse Employees","rate":24.3},{"trade":"Gramophone Record Makers","rate":18.5},{"trade":"Grease Mfgrs.","rate":12.15},{"trade":"Grindstone & Millstone Makers Not in Connection with quarries-","rate":18.5},{"trade":"(Quarry risks to be rated as quarries) Groundnut Decorticating (All employees)","rate":12.15},{"trade":"Excl. ordnance work (Workmen engaged in testing and catridge loading)","rate":48.65},{"trade":"Excl. ordnance work (All other employees)","rate":15.1},{"trade":"Hackle Makers","rate":18.5},{"trade":"Harness and Saddle Makers (Wood working machinists)","rate":30.15},{"trade":"Harness and Saddle Makers (All other employees)","rate":12.15},{"trade":"Hat and Topee Works (All descriptions incl. Ladies' Frames and Shapes)","rate":7.8},{"trade":"Heald and Reed Makers (Wood working machinists)","rate":30.15},{"trade":"Heald and Reed Makers (All other employees)","rate":7.8},{"trade":"Heat treatment shops (excl. Forging)","rate":18.5},{"trade":"Hide and Skin Merchants and Dealers (Incl. Anthrax)","rate":36.5},{"trade":"Hide and Skin Merchants and Dealers (Excl. Anthrax)","rate":15.1},{"trade":"Hiking Clubs (Sherpas employed for carrying loads in the mountains: Wages upto 200/- P.M)","rate":60.8},{"trade":"Hiking Clubs (Sherpas employed for carrying loads in the mountains: Wages upto 300/- P.M.)","rate":72.95},{"trade":"Hiking Clubs (Sherpas employed for carrying loads in the mountains: Wages exceeding 300/- P.M. and Tackle are used but loaded by 25% when)","rate":97.3},{"trade":"Hollow Ware Mfgrs. (Metal) (Domestic - Utensils incl. stamping and enamelling)","rate":24.3},{"trade":"Horse Hair Mfgrs (Incl. Anthrax)","rate":24.3},{"trade":"Horse Hair Mfgrs (Excl. Anthrax)","rate":12.15},{"trade":"Horse Breeders Trainers and Jokeys","rate":60.8},{"trade":"Hosiery Factories","rate":5.85},{"trade":"Reformatories, Public, Benevolent and Charitable, I institutions, inebriate and similar homes (Clerical and salaried office staff)","rate":2.45},{"trade":"Wood-working machinists","rate":30.15},{"trade":"Nurses keepers and attendants on Lunatics","rate":9.25},{"trade":"All other employees","rate":5.85},{"trade":"Indoor","rate":4.35},{"trade":"Outdoor and maintenance staff, incl. lift attendants","rate":18.5},{"trade":"Hurricane Lantern Mfgrs","rate":24.3},{"trade":"Ice Dealers and Mfgrs - of freight-)","rate":24.3},{"trade":"Excluding Dry Ice Manufacturers (see Dry Ice Mfgrs) Import and Export Merchants (All employees)","rate":30.15},{"trade":"Ice Cream Mfgrs/-","rate":12.15},{"trade":"India Rubber- (see Regulation No 12) Gutta percha, vulcanite and India rubber goods, belting (ebonite, ebonestos and water proof material Mfgrs.)","rate":24.3},{"trade":"Water proof garment makers","rate":5.85},{"trade":"Stamp makers","rate":10.7},{"trade":"Tyre Mfgrs.","rate":24.3},{"trade":"Waste workers and re-claimers","rate":42.8},{"trade":"Indigo Mfgrs.","rate":24.3},{"trade":"Inland Water Transport Companies","rate":30.15},{"trade":"Ink Mfgrs.","rate":5.85},{"trade":"Insurance Companies","rate":2.9},{"trade":"Insecticides/Pesticide","rate":30.15},{"trade":"Insecticides/Pesticide spraying","rate":24.3},{"trade":"Intra-uterine contraceptives devices Mfgrs. and Pearl cutters -)","rate":5.85},{"trade":"Ivory, Bone and Tortoiseshell goods Makers, Where the materials handled are solely ivory and/or (tortoiseshell and/or pearl)","rate":18.5},{"trade":"Ivory, Bone and Tortoiseshell goods Makers, Where the materials handled are solely ivory and/or (and/or tortoiseshell and/or pearl)","rate":36.5},{"trade":"Jacquard Harness makers-","rate":18.5},{"trade":"Jam and provision preservers and packers","rate":18.5},{"trade":"Jelly and Powder (table) Mfgrs .","rate":18.5},{"trade":"Jewelers, Goldsmith and Silversmith (Retail only)","rate":5.85},{"trade":"Jewelers, Goldsmith and Silversmith (Wholesale and Mfgr.)","rate":9.25},{"trade":"Jewelers, Goldsmith and Silversmith (and winding)","rate":48.65},{"trade":"Jewelers, Goldsmith and Silversmith (Loading and unloading into Railway wagons)","rate":18.5},{"trade":"Handling Jute, loose and in pucca or kucha bales","rate":9.25},{"trade":"Jute Mills (All processes incl. mill godowns)","rate":9.25},{"trade":"Jute Presses (All employees in pucca baling presses)","rate":18.5},{"trade":"Jute Presses (All employees in Kutcha baling presses)","rate":18.5},{"trade":"Jute Presses (All descriptions incl. incandescent lamps)","rate":12.15},{"trade":"Land Drainage Service (Excl. blasting and tunnelling)","rate":30.15},{"trade":"Land Drainage Service (Incl. blasting and tunnelling)","rate":97.3},{"trade":"Lapidaries and precious stone cutters (Excl. Lead poisoning)","rate":7.8},{"trade":"Lapidaries and precious stone cutters (Incl. Lead poisoning)","rate":18.5},{"trade":"Incl. receiving office employees (Where machinery is used)","rate":15.1},{"trade":"Incl. receiving office employees (Where no machinery is used)","rate":5.85},{"trade":"Lead pencil Makers (see Regulation No. 13)","rate":12.15},{"trade":"Lead smelters and/or extractors","rate":60.8},{"trade":"Leather Dresser and Dyers","rate":15.1},{"trade":"Leather Goods Mfgrs. (Excl. Belting)","rate":15.1},{"trade":"LGP Bottling Plant","rate":30.15},{"trade":"Passengers Lift attendants in Offices, Residential Premises, Shops, Hospitals, Nursling Homes and Educational Institutions","rate":9.25},{"trade":"(Upkeep of Insured 's own property only)","rate":21.4},{"trade":"Lighthouse Keepers-","rate":145.9},{"trade":"Lime Works and Kilns (Excl. Quarry or Mining Risks)","rate":30.15},{"trade":"Linen Finishers of Gas Cylinders by hand, handcart and mechanically)","rate":12.15},{"trade":"Liquified Petroleum Gas Dealers (propelled vehicles)","rate":12.15},{"trade":"Lock Makers","rate":9.25},{"trade":"Live Stock Farm","rate":15.1},{"trade":"Buyers, salesmen and show room assistants","rate":12.15},{"trade":"Warehouse","rate":24.3},{"trade":"Second-hand Machinery and scrap Metal Dealers excl. (dismantling breaking up and demolition)","rate":54.5},{"trade":"Dismantling breaking up and demolition","rate":170.25},{"trade":"Maltsters","rate":12.15},{"trade":"Manure and Fertiliser Mfgrs.-","rate":18.5},{"trade":"Marble and granite Works, Dressing and polishing, (not in connection with Quarries)","rate":60.8},{"trade":"Margarine Mfgrs.-","rate":9.25},{"trade":"Match Mfgrs-","rate":24.3},{"trade":"Meat Market (Salesman only)","rate":5.85},{"trade":"Assistants, incl. cutting up","rate":21.4},{"trade":"Porters","rate":27.25},{"trade":"Messengers (Office) and Bill Collectors Using Cycles","rate":12.15},{"trade":"Not Using Cycles","rate":4.35},{"trade":"Bell Founders","rate":12.15},{"trade":"Metal Spinners","rate":15.1},{"trade":"Metal Makers","rate":12.15},{"trade":"Pewterers","rate":15.1},{"trade":"Stereotypes","rate":15.1},{"trade":"Tin Refiners","rate":12.15},{"trade":"Typefounders","rate":12.15},{"trade":"Aeroplane small parts (Metal)","rate":12.15},{"trade":"Cotton Gin Machinery parts","rate":18.5},{"trade":"Electric Light Fittings","rate":12.15},{"trade":"Hinges","rate":24.3},{"trade":"Gas Fittings","rate":12.15},{"trade":"German Silver, Solder, and Spelter Goods","rate":12.15},{"trade":"Motor Vehicle small parts (metal)","rate":15.1},{"trade":"Valves","rate":12.15},{"trade":"Water fitting (excl. Meters)","rate":12.15},{"trade":"Flexible Metallic Tubing","rate":12.15},{"trade":"Workers in Zinc, not smelting or rolling (Where no work away from the shop or yard is done)","rate":15.1},{"trade":"Workers in Zinc, not smelting or rolling (Where any work away from the shop or yard is done)","rate":18.5},{"trade":"Workers in Zinc, not smelting or rolling (and Ploughers etc.)","rate":36.5},{"trade":"Mica Cutters","rate":9.25},{"trade":"Milk Mfgrs., Condensed and Sterilised of every description, incl. employees engaged in)","rate":27.25},{"trade":"Asbestos (open cast)","rate":42.8},{"trade":"Barytes","rate":36.5},{"trade":"Chromite","rate":54.5},{"trade":"Copper","rate":48.65},{"trade":"Gold","rate":97.3},{"trade":"Graphite","rate":42.8},{"trade":"Iron Ore","rate":97.3},{"trade":"Lead","rate":48.65},{"trade":"Manganese","rate":54.5},{"trade":"Mica","rate":42.8},{"trade":"Ochre","rate":42.8},{"trade":"Salt","rate":42.8},{"trade":"Silver","rate":48.65},{"trade":"Tin","rate":48.65},{"trade":"Wolfram","rate":48.65},{"trade":"Motor Cycle and Cycle Patrols (Automobile Association or Clubs) (All Employees)","rate":42.8},{"trade":"Motor Cycle and Cycle Patrols (Automobile Association or Clubs) (Motor Race Drivers per car per race)","rate":121.6},{"trade":"Motor Garages, Showrooms and Assemblers of Motor Vehicles (Woodworking machinists)","rate":30.15},{"trade":"Motor Garages, Showrooms and Assemblers of Motor Vehicles (All other employees incl. salesman drivers all mechanics)","rate":15.1},{"trade":"(Land cultivation only)","rate":36.5},{"trade":"Myrobalan Extract Manufacturing","rate":15.1},{"trade":"Nail Makers (Where no mechanically is used)","rate":18.5},{"trade":"Nail Makers (Where machinery is used)","rate":24.3},{"trade":"Nurse (Not attending on lunatics)","rate":5.85},{"trade":"Attending on lunatics","rate":9.25},{"trade":"Nut and Bolt Makers (Iron and Steel) (Where no mechanically driven machinery is used)","rate":18.5},{"trade":"Nut and Bolt Makers (Iron and Steel) (Where machinery is used)","rate":24.3},{"trade":"Oakum Mfgrs.","rate":12.15},{"trade":"Oil Companies, importing in bulk for retail Distribution (All employees)","rate":12.15},{"trade":"Oil Mills (not mineral oils) and Oilcake Mfgrs","rate":36.5},{"trade":"Oil skin and Tarpaulin Mfgrs","rate":12.15},{"trade":"Oil Well Proprietors and Mineral Oil Refiners (lines or overhead electric cable)","rate":97.3},{"trade":"Oil Well Proprietors and Mineral Oil Refiners (All other employees)","rate":30.15},{"trade":"Omnibus and Motor Bus Proprietors","rate":24.3},{"trade":"Open Cast Coal-Getting (incl. use of explosives)","rate":68.1},{"trade":"Ore Importers and Exporters where carried on as a separate trade (incl. Godown and Loading and Unloading Vessels)","rate":97.3},{"trade":"Oyster Cultivators","rate":36.5},{"trade":"Oil expeller and oil expeller spare parts mfgrs.","rate":27.25},{"trade":"Paint Colour and Enamal Mfgrs. (Where no red or white lead manufactured)","rate":12.15},{"trade":"Paint Colour and Enamal Mfgrs. (Where red or white lead manufactured)","rate":18.5},{"trade":"Painters and Decorators where carried on as separate trade, not Builders (All risks incl. ship painters, scrapers and scalers)","rate":145.9},{"trade":"Painters and Decorators where carried on as separate trade, not Builders (railway stations or railway platform awnings)","rate":60.8},{"trade":"Tapping or Picking","rate":48.65},{"trade":"Hand made only","rate":12.15},{"trade":"Machine made","rate":30.15},{"trade":"Waxed Paper","rate":18.5},{"trade":"Paper Patern Makers","rate":12.15},{"trade":"Paper Waxing (where carried on as a separate Trade)","rate":18.5},{"trade":"Paper Mache Decorators (Inside work only)","rate":15.1},{"trade":"Parcel Delivery Agents, Carriers & Carters","rate":36.5},{"trade":"Parquet Floor Cutting (Wood work machinists)","rate":30.15},{"trade":"Parquet Floor Cutting (All other employees)","rate":12.15},{"trade":"Parquet Floor Laying","rate":24.3},{"trade":"Patent Fuel and Firelighter Mfgrs.","rate":97.3},{"trade":"Patent Card Makers","rate":12.15},{"trade":"Perfume Mfgrs.","rate":12.15},{"trade":"Pest Control and Fumigation","rate":24.3},{"trade":"Petro Pump Stations (All other Works)","rate":12.15},{"trade":"Petrochemical Industry","rate":30.15},{"trade":"Photo Block and Process Block Mfgrs.","rate":9.25},{"trade":"Photographers and Photographic Appliances Dealers (Shop and studio)","rate":7.8},{"trade":"Photographers and Photographic Appliances Dealers (Operators and assistants engaged partly or wholly outside)","rate":12.15},{"trade":"Photographers and Photographic Appliances Dealers (Retail Shop risk)","rate":12.15},{"trade":"Photographers and Photographic Appliances Dealers (Wood work machinists)","rate":30.15},{"trade":"Photographers and Photographic Appliances Dealers (All other employees)","rate":12.15},{"trade":"Picture Frame Moulding Makers (Wood working machinists)","rate":30.15},{"trade":"Picture Frame Moulding Makers (All other employees)","rate":15.15},{"trade":"Pile Drivers (Where carried on as a separate trade)","rate":54.7},{"trade":"Pit Prop cutting where carried on as a separate Trade","rate":48.65},{"trade":"Planing and Moulding Mills - and Moulders where carried on separate Trade -)","rate":48.65},{"trade":"Plasterers and Plaster and Fibrous Plaster Modellers (All Risks)","rate":97.3},{"trade":"Plasterers and Plaster and Fibrous Plaster Modellers (halls, public halls and theaters)","rate":30.15},{"trade":"Plastic Goods Mfgrs.","rate":16.5},{"trade":"Plumber, Hotwater and Sanitary Engineers where carried on as separate Trade (Retail Shop risk)","rate":9.25},{"trade":"Mechanics (with wells exceeding 6 meters)","rate":15.1},{"trade":"Mechanics (depth but excl. Sinking)","rate":48.65},{"trade":"Ship furnishing","rate":18.5},{"trade":"Well sinking (other than artesian and tube wells q.v.)","rate":121.6},{"trade":"Polo Clubs (Stable hands and employees engaged in ridding)","rate":60.8},{"trade":"Polo Clubs (All other employees)","rate":15.1},{"trade":"Porters (Station) for carrying passengers' luggage per Capita","rate":4.9},{"trade":"Potato Dehydrating (Where no mechanically driven machinery is used)","rate":9.25},{"trade":"Potato Dehydrating (Where mechanically driven machinery is used)","rate":18.5},{"trade":"Potteries and Pottery Decorators a) Excl. Manufacture of Flooring, Roofing and Terakotta Tiles; Excl. Clay getting and Mining also excl. Lead Poisoning","rate":12.15},{"trade":"b) Incl. Lead poisoning - above rate plus and roofing and terakotta tiles- rate as bricks and tile)","rate":36.5},{"trade":"c) Tile Mfgrs., i.e. rough unglazed tiled for flooring Makers","rate":48.65},{"trade":"d) Clay-getting excl. work below 6 meters (fireclay (mining - rate as collieries))","rate":24.3},{"trade":"d) Clay-getting excl. work below 6 meters (fireclay (e) Clay-getting below 6 meters excl. pit or mine)","rate":42.8},{"trade":"Poultry and Hatchery (Where no electrical appliances are involved)","rate":3.05},{"trade":"Poultry and Hatchery (Where electrical appliances are used)","rate":6.1},{"trade":"Poultry and Hatchery (Excl. printing of daily news papers excel. lead poisoning)","rate":5.85},{"trade":"Poultry and Hatchery (Printing of daily news papers excl. lead poisoning)","rate":9.25},{"trade":"Poultry and Hatchery (Incl. lead poisoning - above rates plus of every description incl. employees engaged in)","rate":36.5},{"trade":"Quarries (Where no blasting is done)","rate":30.15},{"trade":"Quarries (Where any blasting is done)","rate":97.3},{"trade":"Grooms, Jockeys and Stable hands","rate":60.8},{"trade":"All other employees","rate":12.15},{"trade":"Breaking up, dismantling and demolition","rate":170.25},{"trade":"All employees in loading and discharging vessels","rate":97.3},{"trade":"All other employees","rate":36.5},{"trade":"Railway Coach and Wagon Works","rate":42.8},{"trade":"Railway Construction and alteration (Excl. blasting and tunnelling)","rate":36.5},{"trade":"Railway Construction and alteration (Incl. blasting and tunnelling)","rate":72.95},{"trade":"Tunnelling, incl. Blasting (when carried as a separate Contract)","rate":97.3},{"trade":"Light Railways for passengers only","rate":12.15},{"trade":"Light Railways for goods and passengers","rate":15.1},{"trade":"Electric Railways","rate":24.3},{"trade":"Other Railways","rate":24.3},{"trade":"Labour employed in loading and unloading wagons","rate":30.15},{"trade":"Railway Station Refreshment Rooms' Private Contractor Controlling (dining car attendants and to passengers in trains, i.e. chota hazri and tea who)","rate":54.5},{"trade":"Railway Station Refreshment Rooms' Private Contractor Controlling (will occasionally travel short distance by train.)","rate":18.5},{"trade":"Railway Station Refreshment Rooms' Private Contractor Controlling (in the refreshment room and never travel by train)","rate":4.35},{"trade":"Rayon Mills","rate":7.8},{"trade":"Getting material from","rate":42.8},{"trade":"Remound depots","rate":72.95},{"trade":"Resin mfgrs.","rate":36.5},{"trade":"Rice Millers (All other employees)","rate":15.1},{"trade":"Rifle Clubs (care takers)","rate":30.15},{"trade":"Rivet Makers (Making copper rivet for tin work)","rate":12.15},{"trade":"Rivet Makers (All other employees)","rate":24.3},{"trade":"Road Paving, Tarring and Road Making","rate":30.15},{"trade":"Roofing and Flooring Makers and/or Layers (not slaters or tilers) Hands in shop or yard (Wood working machinists)","rate":30.15},{"trade":"Roofing and Flooring Makers and/or Layers (not slaters or tilers) Hands in shop or yard (All other employees)","rate":18.5},{"trade":"Rope (Excl. Wire Rope) Cord and Twine (Where no mechanically driven machinery is used)","rate":12.15},{"trade":"Rope (Excl. Wire Rope) Cord and Twine (Where any mechanically driven machinery is used)","rate":24.3},{"trade":"Cotton yarn only (excl. repairing and spinning)","rate":7.8},{"trade":"Cotton yarn only (excl. repairing and spinning)","rate":18.5},{"trade":"See India Rubber Rubber Plantations (wholly by the estate)","rate":2.9},{"trade":"See India Rubber Rubber Plantations (All other employees)","rate":2.9},{"trade":"See India Rubber Rubber Plantations (separate trade)-)","rate":10.7},{"trade":"Safety Razor Blades Mfgrs.","rate":12.15},{"trade":"Sail Makers only, excl. Riggers","rate":10.7},{"trade":"Riggers or to vessels. and/or no Dock, Quayside or wharf)","rate":97.3},{"trade":"Salt Merchants and Dealers (and lightermen (excl. Stevedores))","rate":72.95},{"trade":"Salt Merchants and Dealers (All other Employees)","rate":18.15},{"trade":"Salt Works (Excl. Mining)","rate":24.3},{"trade":"Salvage Corps (crops in handling and treating salvaged goods)","rate":30.15},{"trade":"Salvage Corps (All other employees)","rate":30.15},{"trade":"Sand (All employees)","rate":97.3},{"trade":"Sauce Mfgrs.","rate":18.5},{"trade":"Sausage & Sausage skin Mfgrs.","rate":21.4},{"trade":"Saw Mill and Timber Merchants (All Employees)","rate":30.15},{"trade":"Screw Mfgrs.","rate":12.15},{"trade":"Sewer and Road Contractors (exceeds 3 meters)","rate":30.15},{"trade":"Sewer and Road Contractors (exceeds 3 meters)","rate":36.5},{"trade":"Sewer and Road Contractors (All risks where and /or blasting and tunnelling is done)","rate":72.95},{"trade":"Sewing Machine Makers. Fitters and Repairers","rate":15.1},{"trade":"Sheet Lead Rollers and Lead Pipe Makers (Excl. Lead poisoning)","rate":48.65},{"trade":"Sheet Lead Rollers and Lead Pipe Makers (Incl. Lead poisoning)","rate":60.8},{"trade":"Shellac Mfgrs.","rate":21.4},{"trade":"Ship Breakers","rate":97.3},{"trade":"Ship Builders, Iron, Steel and Concrete (exceeding 1000 tons gross measurement are built)","rate":30.15},{"trade":"Ship Builders, Iron, Steel and Concrete (Where such vessels are repaired only)","rate":42.8},{"trade":"Ship Builders, Iron, Steel and Concrete (measurement are built)","rate":36.5},{"trade":"Ship Builders, Iron, Steel and Concrete (Where such vessels are repaired only)","rate":54.5},{"trade":"Ship Builders, Iron, Steel and Concrete (not incl. in (a) or (b) are built)","rate":42.8},{"trade":"Ship Builders, Iron, Steel and Concrete (Where such vessels are repaired only)","rate":54.5},{"trade":"Pontoon Builders and repairers","rate":72.95},{"trade":"Fixing and rigging","rate":97.3},{"trade":"All other employees","rate":18.5},{"trade":"Without the use of stagings or slings","rate":60.8},{"trade":"Shipsmiths (jobbing) where carried on as a separate trade","rate":48.65},{"trade":"Shipwrights (jobbing) where carried on as a separate trade","rate":109.45},{"trade":"Shop Fitters (Wood working machinists)","rate":30.15},{"trade":"Shop Fitters (All other employees)","rate":24.3},{"trade":"Art, bric-a-brac and curio and art needle works","rate":4.9},{"trade":"Bakers","rate":4.9},{"trade":"Barometer, Hydrometer, Thermometer and Mathematical Instruments","rate":4.9},{"trade":"Biscuits","rate":4.9},{"trade":"Book","rate":4.9},{"trade":"Boot and shoe, excl. makers and repairs","rate":4.9},{"trade":"Chemists","rate":4.9},{"trade":"China and glass","rate":4.9},{"trade":"Confectioners","rate":4.9},{"trade":"Cutlery","rate":4.9},{"trade":"Diaries","rate":4.9},{"trade":"Drapers","rate":4.9},{"trade":"Dress Maskers","rate":4.9},{"trade":"Fancy goods","rate":4.9},{"trade":"Floorist and seedsmen","rate":4.9},{"trade":"Furriers","rate":4.9},{"trade":"Haberdashers","rate":4.9},{"trade":"Hatters","rate":4.9},{"trade":"Hoosiers","rate":4.9},{"trade":"Leather Goods","rate":4.9},{"trade":"Milliners","rate":4.9},{"trade":"Wholesale","rate":4.9},{"trade":"Musical instruments (Salesmen only)","rate":4.9},{"trade":"Naturalists not taxidermists","rate":4.9},{"trade":"Nautical instruments and appliances","rate":4.9},{"trade":"Newsagents","rate":4.9},{"trade":"Opticians","rate":4.9},{"trade":"Photographic Records","rate":4.9},{"trade":"Photographic appliances","rate":4.9},{"trade":"Photographers","rate":4.9},{"trade":"Stationers","rate":4.9},{"trade":"Surgical instrument and appliances","rate":4.9},{"trade":"Tailors, Clothiers and outfitters","rate":4.9},{"trade":"Toys","rate":4.9},{"trade":"Tobacconists","rate":4.9},{"trade":"Wall papers","rate":4.9},{"trade":"Watch Makers","rate":4.9},{"trade":"Fruiterers","rate":7.8},{"trade":"Greengrocers","rate":7.8},{"trade":"Groceries and provisions - no licence and no machinery (All other employees)","rate":7.8},{"trade":"Ironmongers excl. Mechanics","rate":7.8},{"trade":"Italian warehouse men","rate":7.8},{"trade":"Oil and colour","rate":7.8},{"trade":"Chandlers (not ship chandlers)","rate":9.25},{"trade":"Cheesemongers","rate":9.25},{"trade":"Cooked Meat or cooked fish","rate":9.25},{"trade":"Corn Chandlers, Dealers and Merchants retail only (excl. Delivery)","rate":9.25},{"trade":"Using machinery but excl. delivery","rate":12.15},{"trade":"Furniture Electrical items excl. delivery by hand, (handcraft and otherwise)","rate":9.25},{"trade":"Off licence where no bottling buy machinery is done (All other employees)","rate":9.25},{"trade":"Hair Dressers","rate":9.25},{"trade":"Pawnbrokers","rate":9.25},{"trade":"Perambulators","rate":9.25},{"trade":"Picture and Picture Frame Dealers excl. Machinery","rate":9.25},{"trade":"Sewing and Washing machines","rate":9.25},{"trade":"Wine, spirit and beer dealers","rate":9.25},{"trade":"Off licence where no bottling by machinery is done (All other employees)","rate":9.25},{"trade":"Off licence where bottling by machinery is done (All other employees)","rate":12.15},{"trade":"Gunsmiths","rate":12.15},{"trade":"Off licence only where bottling by machinery is done (All other Employees)","rate":12.15},{"trade":"Butchers","rate":18.5},{"trade":"Fishmongers","rate":18.5},{"trade":"Furniture removers (see Classification No 175) Groceries and Provisions - (Full licence) All employees engaged partially or wholly in (serving drink)","rate":18.5},{"trade":"Furniture removers (see Classification No 175) Groceries and Provisions - (Full licence) All employees engaged partially or wholly in (is done excl. delivery by hand or otherwise)","rate":9.25},{"trade":"Furniture removers (see Classification No 175) Groceries and Provisions - (Full licence) All employees engaged partially or wholly in (is done excl. delivery by hand or otherwise)","rate":10.7},{"trade":"Poulterers","rate":18.5},{"trade":"Publicans","rate":18.5},{"trade":"Wine Spirit & Beer dealers-Ful-Licence (All employees)","rate":18.5},{"trade":"Short Mfgrs.","rate":24.3},{"trade":"Not glass (Excl. Erection)","rate":15.1},{"trade":"Not glass (Incl. Erection)","rate":36.5},{"trade":"Silk Artificial (Yarn Production)","rate":12.15},{"trade":"Silk Artificial (Weaving and process subsequent to yarn production)","rate":7.8},{"trade":"Silk Artificial (Doubling)","rate":5.85},{"trade":"Silk Artificial (All Processes)","rate":18.5},{"trade":"Silk Artificial (Winding (as separate trade))","rate":4.35},{"trade":"Silk Spinners and/or weavers","rate":7.8},{"trade":"Sinking:- Pit or Mine opening up or driving (levels or slants)","rate":170.25},{"trade":"Slag Crushers and Removers","rate":60.8},{"trade":"Slaters and Tilers (Roofs) where carried on as a separate trade (Work on roof; not exceeding 9 meters in height)","rate":36.5},{"trade":"Exceeding 9 meters in height","rate":60.8},{"trade":"Slaughtermen","rate":48.65},{"trade":"Small Arm Factories (Excl. testing and cartridge loading)","rate":15.1},{"trade":"Testing and cartridge loading","rate":48.65},{"trade":"Small Wear Mfgrs. ( Braid, Laces other Leather, Tassels & Cords)","rate":9.25},{"trade":"Snuff Manufacturing Factories (All other employees)","rate":18.5},{"trade":"Soap Makers, melters and boilers","rate":24.3},{"trade":"Soap Makers, (toilet) where remelting and (perfuming only are done)","rate":9.25},{"trade":"Automatic","rate":48.65},{"trade":"Non-automatic or batch type","rate":60.8},{"trade":"Spice Mfgrs. (Incl. nut grinding and shelling)","rate":18.5},{"trade":"Spring and Axle makers","rate":15.1},{"trade":"Stampers and piercers (Where carried on as a separate trade)","rate":30.15},{"trade":"Starch and Blue Mfgrs.","rate":30.15},{"trade":"Stationers (Retail shop risk)","rate":5.85},{"trade":"Manufacturing and/or wholesale","rate":12.15},{"trade":"Steel or Iron Founders (Where the heaviest casting does not exceed 1 ton)","rate":30.15},{"trade":"Steel or Iron Founders (Where the heaviest casting exceeds 1 ton)","rate":42.8},{"trade":"Steel or Iron Rolling Mills","rate":48.65},{"trade":"Steel work (Steel Making )","rate":48.65},{"trade":"Stevedors loading or unloading Cargo or Coal","rate":97.3},{"trade":"Stone and dressing and stone breaking Yards (to quarry where b lasting is done)","rate":97.3},{"trade":"Stone and dressing and stone breaking Yards (All other employees)","rate":60.8},{"trade":"Sugar cane Plantation","rate":5.85},{"trade":"Sugar, Saccharine and Glucose Refiners and/or Mfgrs. incl. sugarcane crushing Factories engaged in (preparing Jagree)","rate":18.5},{"trade":"Sugar Sweet mfgrs.","rate":15.1},{"trade":"Tally Clerks","rate":14.6},{"trade":"Tanners, Carriers and Fellomongers","rate":12.15},{"trade":"Tar Spraying Roads","rate":30.15},{"trade":"Taxidermists (Excl. Anthrax)","rate":24.3},{"trade":"Taxidermists (Incl. Anthrax)","rate":36.5},{"trade":"Tea Gardens","rate":2.45},{"trade":"Domestic servants on Tea-Estate - Servants (excl. private motor car drivers, attendants and/or cleaners) whose names appear on the factory or garden register (and whih are paid wholly by the estate)","rate":2.45},{"trade":"Tea Packing Factories (Wood working machinists)","rate":30.15},{"trade":"Tea Packing Factories (All other employees)","rate":9.25},{"trade":"Telephone Operators","rate":5.85},{"trade":"Tent and Marque Makers","rate":15.1},{"trade":"Erecting only","rate":48.65},{"trade":"Thatchers of Buildings","rate":36.5},{"trade":"Theater Artists Bandsmen and Permanent Staff","rate":12.15},{"trade":"Tilers (not roofing) and Mosaic and Tressellated Pavers Floor and, excl. clay getting","rate":15.1},{"trade":"Timber Raftmen","rate":91.45},{"trade":"Tin Dredgers","rate":24.3},{"trade":"Tin & Steel and Steel Metal Workers (incl. metal boxes and drums) Where no mechanically driven machinery is used (incl. Smelting)","rate":18.5},{"trade":"Where any mechanically driven machinery is used","rate":27.25},{"trade":"The Ore Getting from open Workings and Machine Crushing","rate":60.8},{"trade":"Tin Ore Getting from open Workings where (no Machinery is used)","rate":30.15},{"trade":"Transmiths (Excl. Ship work)","rate":30.15},{"trade":"Ship work","rate":24.3},{"trade":"Tobacco, Cigar and Cigarette and Bidi Mfgrs. and Dealers Retailed shop risk","rate":7.8},{"trade":"Tobacco, Cigar and Cigarette and Bidi Mfgrs. and Dealers Godwon","rate":5.85},{"trade":"Manufacturing (Where no mechanically driven machinery is used)","rate":7.8},{"trade":"Manufacturing (Where any mechanically driven machinery is used)","rate":7.8},{"trade":"Machine tools other than wood-working machinery","rate":24.3},{"trade":"Wood-working machinery","rate":27.25},{"trade":"Tools for use in machine tools","rate":15.1},{"trade":"Tools and Machine Tools Mfgrs. (All other tools incl. garden tools)","rate":12.15},{"trade":"Mfg. of all classes of toys incl. celluloid toys","rate":54.5},{"trade":"Mfg. of all classes of toys excl. celluloid toys","rate":27.25},{"trade":"Mfg. of all classes of toys excl. celluloid toys and (excl. the use of machinery)","rate":15.1},{"trade":"Tramway Construction (Incl. all incidental work on through-fares or elesewhere)","rate":60.8},{"trade":"Tramway upkeep and running","rate":36.5},{"trade":"Tube Drawers","rate":12.15},{"trade":"Tug Owners (Where carried on as a separate trade)","rate":54.5},{"trade":"Tug Owners (separate trade))","rate":97.3},{"trade":"T.V. Picture Tube Mfgrs and Typewriting Suppliers -)","rate":15.1},{"trade":"Typwriting Machine Makers, Dealers and Repairers (Retail shop risk)","rate":7.8},{"trade":"Typwriting Machine Makers, Dealers and Repairers (All other employees)","rate":12.15},{"trade":"Tyre Retreading and Resolving","rate":18.5},{"trade":"Tyre Vulcanisers when carried as a separate trade","rate":15.1},{"trade":"Umbrella Mfgrs. (Where hand power is used)","rate":9.25},{"trade":"Umbrella Mfgrs. (Where any mechanically driven machinery is used)","rate":12.15},{"trade":"Undertaker (Shop)","rate":15.1},{"trade":"Undertaker (Wood working machinists)","rate":30.15},{"trade":"Undertaker (Outside and stable)","rate":30.15},{"trade":"Upholsterers","rate":9.25},{"trade":"Varnish Japan & Laquer Mfgrs.-","rate":15.1},{"trade":"Wood-working machinists","rate":30.15},{"trade":"All other employees","rate":12.15},{"trade":"Lecturers engaged indoors","rate":5.85},{"trade":"All other employees","rate":24.3},{"trade":"Veterinary Surgeons and Attendants and Grooms (in employ of Veterinary Surgeons - or to vessels and/or on dock, quayside or wharf,)","rate":60.8},{"trade":"Veterinary Surgeons and Attendants and Grooms (and lightmen and Bargemen (excl. Stevedors))","rate":72.95},{"trade":"Warehouse (Godwons) Group I Art, Bric-a-Brac, Curio","rate":9.25},{"trade":"Biscuit","rate":9.25},{"trade":"Bonded Warhouses - Incl. hand bottling","rate":9.25},{"trade":"China Glass and earthware","rate":9.25},{"trade":"Colour, Dyes and Chemicals","rate":9.25},{"trade":"Drug","rate":9.25},{"trade":"Drysalters","rate":9.25},{"trade":"Flax","rate":9.25},{"trade":"India Rubber","rate":9.25},{"trade":"Linen","rate":9.25},{"trade":"Oil and Italian Goods","rate":9.25},{"trade":"Publishers and Booksellers","rate":9.25},{"trade":"Sack and Bag","rate":9.25},{"trade":"Shellac","rate":9.25},{"trade":"Smallware (Braid, laces not leather, tussles and cords)","rate":9.25},{"trade":"Soft goods (textile) not Packers & Makers up as separate trade and not Forwarding and Shipping Agents (Where no packing is done by mechanical power)","rate":9.25},{"trade":"Sugar","rate":9.25},{"trade":"Tea and Coffee","rate":9.25},{"trade":"Wholesale Grocery and provision incl. salesmen","rate":9.25},{"trade":"Group II Bath Brick and Salt Merchants","rate":12.15},{"trade":"Bone incl. Anthrax","rate":12.15},{"trade":"Bottle","rate":12.15},{"trade":"Carpet, rug and linoleum","rate":12.15},{"trade":"Furniture","rate":12.15},{"trade":"Hardware and Ironmongery","rate":12.15},{"trade":"Leather and Leather Goods","rate":12.15},{"trade":"Molasses - Incl. filling by hand","rate":12.15},{"trade":"Packers and Makers up as trade","rate":12.15},{"trade":"Paper","rate":12.15},{"trade":"Public (general storing) Warhouses","rate":12.15},{"trade":"Soft goods (textile) not Packers and Makers up as a trade and not Forwarding and Shipping Agents (Where any packing is done by mechanical power)","rate":12.15},{"trade":"Wool incl. Anthrax","rate":12.15},{"trade":"Group III Branded Warehouses (on machine bottling wages only)","rate":30.15},{"trade":"Group IV Machinery, Iron and Steel girders and heavy ironware (incl. delivery by any vehicle mechanical or otherwise)","rate":36.5},{"trade":"Excl. construction, alteration maintenance or repair work, the sinking or digging of wells and the use of Explosives","rate":18.5},{"trade":"Construction, alteration maintenance or repair work (excl. Use of explosives)","rate":42.8},{"trade":"Construction, alteration maintenance or repair work (incl. use of explosives)","rate":97.3},{"trade":"Construction, alteration maintenance or repair work (separate contract))","rate":97.3},{"trade":"Construction, alteration maintenance or repair work (Weaving and Printing of Cloth by Hand Power)","rate":6.1},{"trade":"Welders, where carried on as a separate trade","rate":36.5},{"trade":"Welders at a height not exceeding 60 feet","rate":60.8},{"trade":"Artesian or Tube","rate":30.15},{"trade":"Other Wells","rate":121.6},{"trade":"Whiting and Pipeclay Mfgrs. (Excl. Mining Quarry)","rate":18.5},{"trade":"Window Cleaners","rate":97.3},{"trade":"Gold and Silver Wire Drawers","rate":9.25},{"trade":"Brass and Copper Wire Drawers","rate":12.15},{"trade":"Steel and Iron Wire Drawers and wire Ropes Mfgrs.","rate":36.6},{"trade":"Wire Goods Makers","rate":21.4},{"trade":"Tuition and Demonstration","rate":30.15},{"trade":"Wood-working machinists","rate":30.15},{"trade":"All other employees","rate":24.3},{"trade":"Woodmen and Foresters engaged in Treefelling Sawing and Carting and/or Forest Fire Fighting","rate":42.8},{"trade":"Wool-combing (Incl. Anthrax)","rate":36.5},{"trade":"Wool-combing (Excl. Anthrax)","rate":15.1},{"trade":"Wool-combing (to the trade carried on in or about the premises)","rate":15.1},{"trade":"Flock, Mungo and Shoddy","rate":24.3},{"trade":"Wool Sorter and/or Wool Waste merchants (Incl. Anthrax)","rate":24.3},{"trade":"Wool Sorter and/or Wool Waste merchants (Excl. Anthrax)","rate":12.15},{"trade":"Where no wool-combing is done (Incl. Anthrax)","rate":24.3},{"trade":"Where no wool-combing is done (Excl. Anthrax)","rate":15.1},{"trade":"Where any wool-combing is done (Incl. Anthrax)","rate":36.5},{"trade":"Where any wool-combing is done (Excl. Anthrax)","rate":24.3},{"trade":"Writing Slate Mfgrs.","rate":33.55},{"trade":"Yarn and Trade Bleachers and/or Dyers (of any other materials is done))","rate":7.8},{"trade":"Yeast Mfgrs.-","rate":12.15},{"trade":"Zinc Smelters and/or Extractors","rate":36.5},{"trade":"Zinc Cooper and Brass Rolling where no smelting is done and/or repairing of picture frames is expressly excluded from the indemnity)","rate":36.5}];
+
+let cats = [];
+let last = null;
+let seq = 0;
+
+function fmt(n) {
+  if (n == null || isNaN(n)) return '—';
+  return '₹' + Math.round(n).toLocaleString('en-IN');
+}
+function rnd(n) { return Math.round(n); }
+function ceil(n) { return Math.ceil(n); }
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleMed() {
+  document.getElementById('medRow').style.display =
+    document.getElementById('medicalExt').value === 'Yes' ? 'block' : 'none';
+}
+
+function addCat() {
+  seq++;
+  cats.push({ id: seq, trade: '', rate: null, workers: '', wage: '', prem: null });
+  render();
+}
+
+function removeCat(id) {
+  if (cats.length <= 1) return;
+  cats = cats.filter(c => c.id !== id);
+  render();
+  clearSum();
+}
+
+function setField(id, field, val) {
+  const c = cats.find(x => x.id === id);
+  if (!c) return;
+  c[field] = val;
+  if (field !== 'prem') { c.prem = null; clearSum(); }
+}
+
+function render() {
+  const list = document.getElementById('workerList');
+  list.innerHTML = '';
+  cats.forEach((c, i) => {
+    const card = document.createElement('div');
+    card.className = 'worker-card';
+    card.innerHTML =
+      '<div class="worker-card-head">' +
+        '<div class="title"><span class="num">' + (i+1) + '</span> Worker Category</div>' +
+        '<button class="btn-del" onclick="removeCat(' + c.id + ')" ' + (cats.length <= 1 ? 'disabled' : '') + ' title="Remove">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>' +
+        '</button>' +
+      '</div>' +
+      '<div class="worker-fields">' +
+        '<div class="field-full">' +
+          '<label>Job Description / Trade</label>' +
+          '<div class="search-wrap">' +
+            '<input type="text" placeholder="Search trade / activity..." value="' + esc(c.trade) + '" ' +
+              'data-id="' + c.id + '" oninput="onSearch(this)" onfocus="onSearch(this)" autocomplete="off"/>' +
+            '<span class="search-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>' +
+          '</div>' +
+        '</div>' +
+        '<div>' +
+          '<label>No. of Workers</label>' +
+          '<input type="number" min="1" placeholder="Ex 10, 15" value="' + c.workers + '" ' +
+            'onchange="setField(' + c.id + ',\'workers\',this.value)" oninput="setField(' + c.id + ',\'workers\',this.value)"/>' +
+        '</div>' +
+        '<div>' +
+          '<label>Daily Wage Per Employee (₹)</label>' +
+          '<input type="number" min="1" placeholder="Ex 1000, 2000" value="' + c.wage + '" ' +
+            'onchange="setField(' + c.id + ',\'wage\',this.value)" oninput="setField(' + c.id + ',\'wage\',this.value)"/>' +
+        '</div>' +
+      '</div>';
+    list.appendChild(card);
+  });
+  // Ensure dropdown containers exist on body (fixed positioning)
+  cats.forEach(c => {
+    let box = document.getElementById('dd' + c.id);
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'dd';
+      box.id = 'dd' + c.id;
+      document.body.appendChild(box);
+    }
+  });
+  document.querySelectorAll('.dd').forEach(el => {
+    const id = parseInt(el.id.replace('dd',''), 10);
+    if (!cats.find(c => c.id === id)) el.remove();
+  });
+}
+
+function closeAllDD() {
+  document.querySelectorAll('.dd.open').forEach(el => {
+    el.classList.remove('open');
+    el.innerHTML = '';
+  });
+}
+
+function positionDD(input, box) {
+  const r = input.getBoundingClientRect();
+  const spaceBelow = window.innerHeight - r.bottom;
+  const ddHeight = 240;
+  box.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 280)) + 'px';
+  box.style.width = Math.min(Math.max(r.width, 260), window.innerWidth - 16) + 'px';
+  // Open upward if not enough space below (common with mobile keyboard)
+  if (spaceBelow < ddHeight && r.top > ddHeight) {
+    box.style.top = 'auto';
+    box.style.bottom = (window.innerHeight - r.top + 3) + 'px';
+  } else {
+    box.style.bottom = 'auto';
+    box.style.top = (r.bottom + 3) + 'px';
+  }
+}
+
+function onSearch(input) {
+  const id = parseInt(input.getAttribute('data-id'), 10);
+  const q = input.value.trim().toLowerCase();
+  const box = document.getElementById('dd' + id);
+  if (!box) return;
+
+  // Close other dropdowns
+  document.querySelectorAll('.dd').forEach(el => {
+    if (el.id !== 'dd' + id) { el.classList.remove('open'); el.innerHTML = ''; }
+  });
+
+  if (!q) { box.classList.remove('open'); box.innerHTML = ''; return; }
+
+  const hits = TARIFFS.filter(t => t.trade.toLowerCase().includes(q)).slice(0, 30);
+  box.innerHTML = '';
+  if (!hits.length) {
+    const empty = document.createElement('div');
+    empty.className = 'dd-item';
+    empty.style.color = '#94a3b8';
+    empty.textContent = 'No matches found';
+    box.appendChild(empty);
+  } else {
+    hits.forEach(t => {
+      const div = document.createElement('div');
+      div.className = 'dd-item';
+      const name = document.createElement('span');
+      name.textContent = t.trade;
+      const rate = document.createElement('span');
+      rate.className = 'rt';
+      rate.textContent = t.rate;
+      div.appendChild(name);
+      div.appendChild(rate);
+      div.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const c = cats.find(x => x.id === id);
+        if (c) { c.trade = t.trade; c.rate = t.rate; c.prem = null; }
+        closeAllDD();
+        render();
+        clearSum();
+      });
+      box.appendChild(div);
+    });
+  }
+  positionDD(input, box);
+  box.classList.add('open');
+}
+
+// Close dropdown when input loses focus (delay so item click still works)
+document.addEventListener('focusin', function(e) {
+  if (!e.target.closest('.search-wrap') && !e.target.closest('.dd')) {
+    closeAllDD();
+  }
+});
+
+// Close on outside tap/click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.search-wrap') && !e.target.closest('.dd')) {
+    closeAllDD();
+  }
+});
+
+// Reposition open dropdown on resize only (do NOT close on scroll — that blocks mobile scroll)
+window.addEventListener('resize', function() {
+  closeAllDD();
+});
+
+
+
+function clearSum() {
+  document.getElementById('sAnnual').textContent = '—';
+  document.getElementById('sMedical').textContent = '—';
+  document.getElementById('sNet').textContent = '—';
+  document.getElementById('sGST').textContent = '—';
+  document.getElementById('sTotal').textContent = '—';
+  document.getElementById('btnQ').classList.remove('show');
+  last = null;
+  cats.forEach(c => { c.prem = null; });
+}
+
+function showErr(msg) {
+  const e = document.getElementById('err');
+  e.textContent = msg;
+  e.classList.add('show');
+  clearSum();
+}
+
+function calc() {
+  const e = document.getElementById('err');
+  e.classList.remove('show');
+  e.textContent = '';
+
+  for (let i = 0; i < cats.length; i++) {
+    const c = cats[i];
+    if (!c.trade || c.rate == null) { showErr('Row ' + (i+1) + ': Select a valid trade from the list.'); return; }
+    if (!parseInt(c.workers, 10) || parseInt(c.workers, 10) < 1) { showErr('Row ' + (i+1) + ': Enter valid workers count.'); return; }
+    if (!parseFloat(c.wage) || parseFloat(c.wage) <= 0) { showErr('Row ' + (i+1) + ': Enter valid daily wage.'); return; }
+  }
+
+  let totalNet = 0;
+  const details = [];
+
+  cats.forEach(c => {
+    const workers = parseInt(c.workers, 10);
+    const daily = parseFloat(c.wage);
+    const rate = parseFloat(c.rate);
+    const monthly = daily * 30;
+    // Minimum applicable monthly wage per worker is ₹15,000.
+    // Amount up to ₹15,000 is charged at the tariff rate; any excess
+    // is charged at the balance rate (max of 6.25% of tariff or 2‰).
+    const applicableMonthly = Math.max(monthly, 15000);
+    const first = Math.min(applicableMonthly, 15000);
+    const bal = Math.max(applicableMonthly - 15000, 0);
+    const firstPrem = (first * workers * 12) * rate / 1000;
+    const balRate = Math.max(rate * 0.0625, 2);
+    const balPrem = (bal * workers * 12) * balRate / 1000;
+    const catPrem = firstPrem + balPrem;
+    totalNet += catPrem;
+    c.prem = catPrem;
+    details.push({ trade: c.trade, workers: workers, daily: daily, prem: catPrem });
+  });
+
+  totalNet = rnd(totalNet);
+
+  const medYes = document.getElementById('medicalExt').value === 'Yes';
+  let medPrem = 0;
+  if (medYes) {
+    const si = document.getElementById('medicalSI').value;
+    let mr = 0.10;
+    if (si === '50000') mr = 0.15;
+    else if (si === '100000') mr = 0.35;
+    medPrem = rnd(totalNet * mr);
+  }
+
+  const bDisc = rnd(totalNet * (parseFloat(document.getElementById('basicDiscount').value) || 0) / 100);
+  const mDisc = medYes ? rnd(medPrem * (parseFloat(document.getElementById('medicalDiscount').value) || 0) / 100) : 0;
+
+  const taxable = totalNet + medPrem - bDisc - mDisc;
+  const gst = rnd(taxable * 0.18);
+  const final = taxable + gst;
+
+  const months = parseInt(document.getElementById('coverageMonths').value, 10);
+  const factor = months / 12;
+  const pNet = rnd(taxable * factor);
+  const pGST = ceil(gst * factor);
+  const pFinal = ceil(final * factor);
+
+  last = {
+    annual: totalNet, medPrem: medPrem, pNet: pNet, pGST: pGST, pFinal: pFinal,
+    months: months, medYes: medYes,
+    medSI: medYes ? document.getElementById('medicalSI').value : null,
+    details: details
+  };
+
+  document.getElementById('sAnnual').textContent = fmt(totalNet);
+  document.getElementById('sMedical').textContent = fmt(medPrem);
+  document.getElementById('sPeriod').textContent = months + ' Months';
+  document.getElementById('sNet').textContent = fmt(pNet);
+  document.getElementById('sGST').textContent = fmt(pGST);
+  document.getElementById('sTotal').textContent = fmt(pFinal);
+  document.getElementById('btnQ').classList.add('show');
+
+}
+
+function quote() {
+  if (!last) return;
+  const qNo = 'WCQ-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 900) + 100);
+  const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  const medTxt = last.medYes ? 'Yes (SI: ₹' + Number(last.medSI).toLocaleString('en-IN') + ')' : 'No';
+
+  let rows = last.details.map((d, i) =>
+    '<tr><td>' + (i+1) + '</td><td>' + esc(d.trade) + '</td><td class="n">' + d.workers +
+    '</td><td class="n">' + fmt(d.daily) + '</td><td class="n">' + fmt(d.prem) + '</td></tr>'
+  ).join('');
+
+  document.getElementById('qContent').innerHTML =
+    '<div class="q-meta">' +
+      '<div><span class="k">Quotation No.</span> : <span class="v">' + qNo + '</span></div>' +
+      '<div><span class="k">Date</span> : <span class="v">' + today + '</span></div>' +
+      '<div><span class="k">Coverage Period</span> : <span class="v">' + last.months + ' Months</span></div>' +
+      '<div><span class="k">Medical Expenses Extension</span> : <span class="v">' + medTxt + '</span></div>' +
+    '</div>' +
+    '<div class="sec-title" style="font-size:.95rem;margin-bottom:10px;color:#0b3d91">' +
+      '<span class="sec-icon" style="width:28px;height:28px;background:#eef4ff;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2" width="14" height="14"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>' +
+      '</span>Worker Details</div>' +
+    '<table class="q-table"><thead><tr>' +
+      '<th style="width:40px">Sl.</th><th>Job Description / Trade</th><th style="width:80px">Workers</th>' +
+      '<th style="width:100px">Daily Wage Per Employee (₹)</th><th style="width:120px">Annual Premium (₹)</th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table>' +
+    '<div class="sec-title" style="font-size:.95rem;margin-bottom:10px;color:#0b3d91">' +
+      '<span class="sec-icon" style="width:28px;height:28px;background:#eef4ff;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2" width="14" height="14"><rect x="4" y="2" width="16" height="20" rx="2"/></svg>' +
+      '</span>Premium Summary</div>' +
+    '<div class="q-sum">' +
+      '<div class="r"><span>Net Annual Premium</span><span>' + fmt(last.annual) + '</span></div>' +
+      '<div class="r"><span>Medical Extension Premium</span><span>' + fmt(last.medPrem) + '</span></div>' +
+      '<div class="r"><span>Coverage Period</span><span>' + last.months + ' Months</span></div>' +
+      '<div class="r"><span>Net Premium After Discounts</span><span>' + fmt(last.pNet) + '</span></div>' +
+      '<div class="r"><span>GST @ 18%</span><span>' + fmt(last.pGST) + '</span></div>' +
+      '<div class="r g"><span>Total Premium (Incl. GST)</span><span>' + fmt(last.pFinal) + '</span></div>' +
+    '</div>' +
+    '<div class="q-notes"><h4>Notes:</h4><ol>' +
+      '<li>This is only a premium indication based on Workmen Compensation (WC) Tariff.</li>' +
+      '<li>Final premium is subject to insurer\'s underwriting and prevailing rules.</li>' +
+      '<li>Medical Expenses Extension, if opted, will be subject to policy terms and conditions.</li>' +
+      '<li>This quotation is valid for 30 days from the date of issue.</li>' +
+    '</ol></div>';
+
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeQ() { document.getElementById('modal').classList.remove('show'); }
+
+function resetAll() {
+  document.getElementById('coverageMonths').value = '12';
+  document.getElementById('medicalExt').value = 'No';
+  document.getElementById('medicalSI').value = '25000';
+  document.getElementById('basicDiscount').value = '0';
+  document.getElementById('medicalDiscount').value = '0';
+  toggleMed();
+  cats = []; seq = 0;
+  addCat();
+  clearSum();
+  document.getElementById('sPeriod').textContent = '12 Months';
+  document.getElementById('err').classList.remove('show');
+}
+
+addCat();
+</script>
+</body>
+</html>
