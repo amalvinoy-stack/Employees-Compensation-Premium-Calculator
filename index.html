@@ -117,10 +117,14 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
 }
 .worker-fields{
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:1fr 1fr 1fr;
   gap:12px;
 }
 .worker-fields .field-full{grid-column:1 / -1}
+@media(max-width:760px){
+  .worker-fields{grid-template-columns:1fr 1fr}
+  .worker-fields .field-full{grid-column:1 / -1}
+}
 @media(max-width:560px){
   .worker-fields{grid-template-columns:1fr}
   .worker-fields .field-full{grid-column:1}
@@ -609,7 +613,7 @@ function toggleMed() {
 
 function addCat() {
   seq++;
-  cats.push({ id: seq, trade: '', rate: null, workers: '', wage: '', prem: null });
+  cats.push({ id: seq, trade: '', rate: null, workers: '', wageType: 'Daily', wage: '', prem: null });
   render();
 }
 
@@ -625,6 +629,7 @@ function setField(id, field, val) {
   if (!c) return;
   c[field] = val;
   if (field !== 'prem') { c.prem = null; clearSum(); }
+  if (field === 'wageType') render();
 }
 
 function render() {
@@ -655,8 +660,15 @@ function render() {
             'onchange="setField(' + c.id + ',\'workers\',this.value)" oninput="setField(' + c.id + ',\'workers\',this.value)"/>' +
         '</div>' +
         '<div>' +
-          '<label>Daily Wage Per Employee (₹)</label>' +
-          '<input type="number" min="1" placeholder="Ex 1000, 2000" value="' + c.wage + '" ' +
+          '<label>Wage Type</label>' +
+          '<select onchange="setField(' + c.id + ',\'wageType\',this.value)">' +
+            '<option value="Daily" ' + (c.wageType === 'Daily' ? 'selected' : '') + '>Daily</option>' +
+            '<option value="Monthly" ' + (c.wageType === 'Monthly' ? 'selected' : '') + '>Monthly</option>' +
+          '</select>' +
+        '</div>' +
+        '<div>' +
+          '<label>Wage Per Employee (₹)</label>' +
+          '<input type="number" min="1" placeholder="' + (c.wageType === 'Monthly' ? 'Ex 15000, 20000' : 'Ex 1000, 2000') + '" value="' + c.wage + '" ' +
             'onchange="setField(' + c.id + ',\'wage\',this.value)" oninput="setField(' + c.id + ',\'wage\',this.value)"/>' +
         '</div>' +
       '</div>';
@@ -797,7 +809,7 @@ function calc() {
     const c = cats[i];
     if (!c.trade || c.rate == null) { showErr('Row ' + (i+1) + ': Select a valid trade from the list.'); return; }
     if (!parseInt(c.workers, 10) || parseInt(c.workers, 10) < 1) { showErr('Row ' + (i+1) + ': Enter valid workers count.'); return; }
-    if (!parseFloat(c.wage) || parseFloat(c.wage) <= 0) { showErr('Row ' + (i+1) + ': Enter valid daily wage.'); return; }
+    if (!parseFloat(c.wage) || parseFloat(c.wage) <= 0) { showErr('Row ' + (i+1) + ': Enter valid ' + (c.wageType === 'Monthly' ? 'monthly' : 'daily') + ' wage.'); return; }
   }
 
   let totalNet = 0;
@@ -805,9 +817,9 @@ function calc() {
 
   cats.forEach(c => {
     const workers = parseInt(c.workers, 10);
-    const daily = parseFloat(c.wage);
+    const wage = parseFloat(c.wage);
     const rate = parseFloat(c.rate);
-    const monthly = daily * 30;
+    const monthly = c.wageType === 'Monthly' ? wage : wage * 30;
     // Minimum applicable monthly wage per worker is ₹15,000.
     // Amount up to ₹15,000 is charged at the tariff rate; any excess
     // is charged at the balance rate (max of 6.25% of tariff or 2‰).
@@ -820,7 +832,7 @@ function calc() {
     const catPrem = firstPrem + balPrem;
     totalNet += catPrem;
     c.prem = catPrem;
-    details.push({ trade: c.trade, workers: workers, daily: daily, prem: catPrem });
+    details.push({ trade: c.trade, workers: workers, wageType: c.wageType, wage: wage, prem: catPrem });
   });
 
   totalNet = rnd(totalNet);
@@ -873,7 +885,7 @@ function quote() {
 
   let rows = last.details.map((d, i) =>
     '<tr><td>' + (i+1) + '</td><td>' + esc(d.trade) + '</td><td class="n">' + d.workers +
-    '</td><td class="n">' + fmt(d.daily) + '</td><td class="n">' + fmt(d.prem) + '</td></tr>'
+    '</td><td class="n">' + esc(d.wageType) + '</td><td class="n">' + fmt(d.wage) + '</td><td class="n">' + fmt(d.prem) + '</td></tr>'
   ).join('');
 
   document.getElementById('qContent').innerHTML =
@@ -889,7 +901,7 @@ function quote() {
       '</span>Worker Details</div>' +
     '<table class="q-table"><thead><tr>' +
       '<th style="width:40px">Sl.</th><th>Job Description / Trade</th><th style="width:80px">Workers</th>' +
-      '<th style="width:100px">Daily Wage Per Employee (₹)</th><th style="width:120px">Annual Premium (₹)</th>' +
+      '<th style="width:80px">Wage Type</th><th style="width:100px">Wage Per Employee (₹)</th><th style="width:120px">Annual Premium (₹)</th>' +
     '</tr></thead><tbody>' + rows + '</tbody></table>' +
     '<div class="sec-title" style="font-size:.95rem;margin-bottom:10px;color:#0b3d91">' +
       '<span class="sec-icon" style="width:28px;height:28px;background:#eef4ff;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;margin-right:6px">' +
