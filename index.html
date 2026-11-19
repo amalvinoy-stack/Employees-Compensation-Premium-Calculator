@@ -312,9 +312,41 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
   .q-notes h4{font-size:.8rem!important;margin-bottom:4px!important}
   .q-notes li{margin-bottom:1px!important}
 }
+
+/* Full-page maintenance lock */
+body{overflow:hidden!important}
+.maintenance-overlay{
+  position:fixed;inset:0;z-index:999999;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;background:rgba(8,20,45,.78);
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  pointer-events:all;
+}
+.maintenance-card{
+  width:min(520px,100%);padding:34px 30px;text-align:center;
+  background:#fff;border:1px solid #dbeafe;border-radius:18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.3);
+}
+.maintenance-icon{
+  width:58px;height:58px;margin:0 auto 18px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  background:#fff7ed;color:#c2410c;font-size:29px;
+}
+.maintenance-card h2{color:#0b3d91;font-size:1.35rem;margin-bottom:12px}
+.maintenance-card p{color:#475569;font-size:.98rem;line-height:1.65}
+.maintenance-card .maintenance-note{margin-top:14px;font-size:.84rem;color:#64748b}
+@media(max-width:480px){.maintenance-card{padding:28px 20px}.maintenance-card h2{font-size:1.18rem}}
 </style>
 </head>
 <body>
+<div class="maintenance-overlay" role="dialog" aria-modal="true" aria-labelledby="maintenanceTitle">
+  <div class="maintenance-card">
+    <div class="maintenance-icon" aria-hidden="true">⚙</div>
+    <h2 id="maintenanceTitle">Calculator Temporarily Unavailable</h2>
+    <p>This calculator is temporarily unavailable while we update the Medical Expenses Extension logic.</p>
+    <p class="maintenance-note">The calculator is temporarily unavailable. Please check back later.</p>
+  </div>
+</div>
 <div class="wrap">
   <!-- Header -->
   <div class="header">
@@ -449,9 +481,13 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
       <div id="medRow" style="display:none;margin-top:12px;max-width:320px">
         <label>Medical SI</label>
         <select id="medicalSI">
-          <option value="25000">₹25,000 (10%)</option>
-          <option value="50000">₹50,000 (15%)</option>
-          <option value="100000">₹1,00,000 (35%)</option>
+          <option value="25000">₹25,000 (40% loading)</option>
+          <option value="50000">₹50,000 (60% loading)</option>
+          <option value="100000">₹1,00,000 (85% loading)</option>
+          <option value="200000">₹2,00,000 (120% loading)</option>
+          <option value="300000">₹3,00,000 (130% loading)</option>
+          <option value="400000">₹4,00,000 (140% loading)</option>
+          <option value="500000">₹5,00,000 (150% loading)</option>
         </select>
       </div>
       <div class="row2" style="margin-top:12px">
@@ -459,10 +495,7 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
           <label>Special Discount on Basic Premium (%)</label>
           <input type="number" id="basicDiscount" value="0" min="0" max="100" step="0.01"/>
         </div>
-        <div>
-          <label>Special Discount on Medical Expenses (%)</label>
-          <input type="number" id="medicalDiscount" value="0" min="0" max="100" step="0.01"/>
-        </div>
+
       </div>
     </div>
 
@@ -838,19 +871,28 @@ function calc() {
   totalNet = rnd(totalNet);
 
   const medYes = document.getElementById('medicalExt').value === 'Yes';
+  const bDisc = rnd(totalNet * (parseFloat(document.getElementById('basicDiscount').value) || 0) / 100);
+  const discountedBasic = totalNet - bDisc;
+
+  // Medical Expenses loading is applied to the discounted basic premium.
   let medPrem = 0;
+  let medRate = 0;
   if (medYes) {
     const si = document.getElementById('medicalSI').value;
-    let mr = 0.10;
-    if (si === '50000') mr = 0.15;
-    else if (si === '100000') mr = 0.35;
-    medPrem = rnd(totalNet * mr);
+    const medicalLoadingRates = {
+      '25000': 40,
+      '50000': 60,
+      '100000': 85,
+      '200000': 120,
+      '300000': 130,
+      '400000': 140,
+      '500000': 150
+    };
+    medRate = medicalLoadingRates[si] || 0;
+    medPrem = rnd(discountedBasic * medRate / 100);
   }
 
-  const bDisc = rnd(totalNet * (parseFloat(document.getElementById('basicDiscount').value) || 0) / 100);
-  const mDisc = medYes ? rnd(medPrem * (parseFloat(document.getElementById('medicalDiscount').value) || 0) / 100) : 0;
-
-  const taxable = totalNet + medPrem - bDisc - mDisc;
+  const taxable = discountedBasic + medPrem;
   const gst = rnd(taxable * 0.18);
   const final = taxable + gst;
 
@@ -861,7 +903,8 @@ function calc() {
   const pFinal = ceil(final * factor);
 
   last = {
-    annual: totalNet, medPrem: medPrem, pNet: pNet, pGST: pGST, pFinal: pFinal,
+    annual: totalNet, basicDiscount: bDisc, discountedBasic: discountedBasic,
+    medPrem: medPrem, medRate: medRate, pNet: pNet, pGST: pGST, pFinal: pFinal,
     months: months, medYes: medYes,
     medSI: medYes ? document.getElementById('medicalSI').value : null,
     details: details
@@ -881,7 +924,7 @@ function quote() {
   if (!last) return;
   const qNo = 'WCQ-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 900) + 100);
   const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-  const medTxt = last.medYes ? 'Yes (SI: ₹' + Number(last.medSI).toLocaleString('en-IN') + ')' : 'No';
+  const medTxt = last.medYes ? 'Yes (SI: ₹' + Number(last.medSI).toLocaleString('en-IN') + '; Loading: ' + last.medRate + '%)' : 'No';
 
   let rows = last.details.map((d, i) =>
     '<tr><td>' + (i+1) + '</td><td>' + esc(d.trade) + '</td><td class="n">' + d.workers +
@@ -932,7 +975,6 @@ function resetAll() {
   document.getElementById('medicalExt').value = 'No';
   document.getElementById('medicalSI').value = '25000';
   document.getElementById('basicDiscount').value = '0';
-  document.getElementById('medicalDiscount').value = '0';
   toggleMed();
   cats = []; seq = 0;
   addCat();
