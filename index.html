@@ -313,40 +313,13 @@ input:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 
   .q-notes li{margin-bottom:1px!important}
 }
 
-/* Full-page maintenance lock */
-body{overflow:hidden!important}
-.maintenance-overlay{
-  position:fixed;inset:0;z-index:999999;
-  display:flex;align-items:center;justify-content:center;
-  padding:24px;background:rgba(8,20,45,.78);
-  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
-  pointer-events:all;
-}
-.maintenance-card{
-  width:min(520px,100%);padding:34px 30px;text-align:center;
-  background:#fff;border:1px solid #dbeafe;border-radius:18px;
-  box-shadow:0 24px 70px rgba(0,0,0,.3);
-}
-.maintenance-icon{
-  width:58px;height:58px;margin:0 auto 18px;border-radius:16px;
-  display:flex;align-items:center;justify-content:center;
-  background:#fff7ed;color:#c2410c;font-size:29px;
-}
-.maintenance-card h2{color:#0b3d91;font-size:1.35rem;margin-bottom:12px}
-.maintenance-card p{color:#475569;font-size:.98rem;line-height:1.65}
-.maintenance-card .maintenance-note{margin-top:14px;font-size:.84rem;color:#64748b}
-@media(max-width:480px){.maintenance-card{padding:28px 20px}.maintenance-card h2{font-size:1.18rem}}
+
+.revision-note{margin:16px 24px 0;padding:11px 14px;border:1px solid #bfdbfe;border-left:4px solid #1a56db;border-radius:8px;background:#eff6ff;color:#1e40af;font-size:.86rem;line-height:1.45}
+.revision-note strong{font-weight:800}
+@media(max-width:560px){.revision-note{margin:12px 14px 0}}
 </style>
 </head>
 <body>
-<div class="maintenance-overlay" role="dialog" aria-modal="true" aria-labelledby="maintenanceTitle">
-  <div class="maintenance-card">
-    <div class="maintenance-icon" aria-hidden="true">⚙</div>
-    <h2 id="maintenanceTitle">Calculator Temporarily Unavailable</h2>
-    <p>This calculator is temporarily unavailable while we update the Medical Expenses Extension logic.</p>
-    <p class="maintenance-note">The calculator is temporarily unavailable. Please check back later.</p>
-  </div>
-</div>
 <div class="wrap">
   <!-- Header -->
   <div class="header">
@@ -449,6 +422,9 @@ body{overflow:hidden!important}
   </div>
 
   <div class="card">
+    <div class="revision-note" role="status">
+      <strong>Note:</strong> This calculator has been updated with the revised Medical Expenses Extension logic.
+    </div>
     <!-- Policy -->
     <div class="section">
       <div class="sec-title">
@@ -478,17 +454,18 @@ body{overflow:hidden!important}
           </select>
         </div>
       </div>
-      <div id="medRow" style="display:none;margin-top:12px;max-width:320px">
-        <label>Medical SI</label>
-        <select id="medicalSI">
-          <option value="25000">₹25,000 (40% loading)</option>
-          <option value="50000">₹50,000 (60% loading)</option>
-          <option value="100000">₹1,00,000 (85% loading)</option>
-          <option value="200000">₹2,00,000 (120% loading)</option>
-          <option value="300000">₹3,00,000 (130% loading)</option>
-          <option value="400000">₹4,00,000 (140% loading)</option>
-          <option value="500000">₹5,00,000 (150% loading)</option>
-        </select>
+      <div id="medRow" class="row2" style="display:none;margin-top:12px">
+        <div>
+          <label>Medical Expenses Type</label>
+          <select id="medicalBasis" onchange="updateMedicalOptions()">
+            <option value="Individual" selected>Individual Basis</option>
+            <option value="Floater">Floater Basis</option>
+          </select>
+        </div>
+        <div>
+          <label>Medical Sum Insured (₹)</label>
+          <select id="medicalSI"></select>
+        </div>
       </div>
       <div class="row2" style="margin-top:12px">
         <div>
@@ -639,9 +616,41 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+const MEDICAL_OPTIONS = {
+  Individual: [
+    { si: 25000, rate: 40 },
+    { si: 50000, rate: 60 },
+    { si: 100000, rate: 85 },
+    { si: 200000, rate: 120 },
+    { si: 300000, rate: 130 },
+    { si: 400000, rate: 140 },
+    { si: 500000, rate: 150 }
+  ],
+  Floater: [
+    { si: 200000, rate: 30 },
+    { si: 500000, rate: 60 },
+    { si: 1000000, rate: 80 },
+    { si: 2000000, rate: 100 },
+    { si: 3000000, rate: 120 },
+    { si: 5000000, rate: 150 }
+  ]
+};
+
+function updateMedicalOptions() {
+  const basis = document.getElementById('medicalBasis').value;
+  const select = document.getElementById('medicalSI');
+  const previous = select.value;
+  const options = MEDICAL_OPTIONS[basis];
+  select.innerHTML = options.map(o =>
+    '<option value="' + o.si + '">₹' + o.si.toLocaleString('en-IN') + ' (' + o.rate + '% loading)</option>'
+  ).join('');
+  if (options.some(o => String(o.si) === previous)) select.value = previous;
+}
+
 function toggleMed() {
-  document.getElementById('medRow').style.display =
-    document.getElementById('medicalExt').value === 'Yes' ? 'block' : 'none';
+  const enabled = document.getElementById('medicalExt').value === 'Yes';
+  document.getElementById('medRow').style.display = enabled ? 'grid' : 'none';
+  if (enabled) updateMedicalOptions();
 }
 
 function addCat() {
@@ -877,18 +886,11 @@ function calc() {
   // Medical Expenses loading is applied to the discounted basic premium.
   let medPrem = 0;
   let medRate = 0;
+  const medBasis = medYes ? document.getElementById('medicalBasis').value : null;
   if (medYes) {
-    const si = document.getElementById('medicalSI').value;
-    const medicalLoadingRates = {
-      '25000': 40,
-      '50000': 60,
-      '100000': 85,
-      '200000': 120,
-      '300000': 130,
-      '400000': 140,
-      '500000': 150
-    };
-    medRate = medicalLoadingRates[si] || 0;
+    const si = Number(document.getElementById('medicalSI').value);
+    const selectedMedicalOption = MEDICAL_OPTIONS[medBasis].find(o => o.si === si);
+    medRate = selectedMedicalOption ? selectedMedicalOption.rate : 0;
     medPrem = rnd(discountedBasic * medRate / 100);
   }
 
@@ -907,6 +909,7 @@ function calc() {
     medPrem: medPrem, medRate: medRate, pNet: pNet, pGST: pGST, pFinal: pFinal,
     months: months, medYes: medYes,
     medSI: medYes ? document.getElementById('medicalSI').value : null,
+    medBasis: medBasis,
     details: details
   };
 
@@ -924,7 +927,7 @@ function quote() {
   if (!last) return;
   const qNo = 'WCQ-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random() * 900) + 100);
   const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-  const medTxt = last.medYes ? 'Yes (SI: ₹' + Number(last.medSI).toLocaleString('en-IN') + '; Loading: ' + last.medRate + '%)' : 'No';
+  const medTxt = last.medYes ? 'Yes (' + last.medBasis + ' Basis; SI: ₹' + Number(last.medSI).toLocaleString('en-IN') + '; Loading: ' + last.medRate + '%)' : 'No';
 
   let rows = last.details.map((d, i) =>
     '<tr><td>' + (i+1) + '</td><td>' + esc(d.trade) + '</td><td class="n">' + d.workers +
@@ -973,6 +976,8 @@ function closeQ() { document.getElementById('modal').classList.remove('show'); }
 function resetAll() {
   document.getElementById('coverageMonths').value = '12';
   document.getElementById('medicalExt').value = 'No';
+  document.getElementById('medicalBasis').value = 'Individual';
+  updateMedicalOptions();
   document.getElementById('medicalSI').value = '25000';
   document.getElementById('basicDiscount').value = '0';
   toggleMed();
